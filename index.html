@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Versus — pairwise ranking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E7ECF1; --panel:#FFFFFF; --ink:#14202B; --muted:#647383; --faint:#8C99A6;
+    --line:#D2DAE3; --line-strong:#BCC6D1; --primary:#22456A; --primary-ink:#17324E;
+    --primary-soft:#E4EBF2; --accent:#E09A38; --accent-deep:#C67F20; --accent-soft:#FBEEDA;
+    --radius:14px; --shadow:0 1px 2px rgba(20,32,43,.05), 0 8px 24px -12px rgba(20,32,43,.18);
+    --shadow-lift:0 2px 6px rgba(20,32,43,.08), 0 18px 40px -16px rgba(20,32,43,.30);
+    --sans:"Inter",system-ui,-apple-system,sans-serif;
+    --display:"Bricolage Grotesque","Inter",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:var(--sans); color:var(--ink);
+    background:radial-gradient(1200px 600px at 82% -10%, #EFF3F7 0%, transparent 60%), var(--paper);
+    min-height:100vh; -webkit-font-smoothing:antialiased; line-height:1.5;
+  }
+  .wrap{max-width:840px;margin:0 auto;padding:32px 22px 80px}
+  .screen{display:none;animation:rise .35s cubic-bezier(.2,.7,.3,1) both}
+  .screen.active{display:block}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .mast{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+  .mark{font-family:var(--display);font-weight:700;font-size:30px;letter-spacing:-.02em;color:var(--ink);line-height:1}
+  .mark .vs{color:var(--accent-deep);font-style:italic}
+  .tag-lede{color:var(--muted);font-size:14px}
+  .lede{color:var(--muted);font-size:15px;margin:14px 0 26px;max-width:56ch}
+
+  .field-label{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:600;color:var(--primary-ink);letter-spacing:.01em;margin-bottom:8px}
+  .field-label.spaced{margin-top:24px}
+  .field-label .hint{font-weight:450;color:var(--faint)}
+  textarea{
+    width:100%;min-height:210px;resize:vertical;font-family:var(--sans);font-size:15.5px;line-height:1.65;color:var(--ink);
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);outline:none;transition:border-color .15s,box-shadow .15s;
+  }
+  textarea::placeholder{color:var(--faint)}
+  textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft),var(--shadow)}
+
+  .q-input{
+    width:100%;font-family:var(--sans);font-size:15.5px;color:var(--ink);background:var(--panel);
+    border:1px solid var(--line);border-radius:11px;padding:12px 16px;box-shadow:var(--shadow);outline:none;transition:border-color .15s,box-shadow .15s;
+  }
+  .q-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft),var(--shadow)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{
+    font-family:var(--sans);font-size:13px;color:var(--muted);background:var(--panel);border:1px solid var(--line);
+    border-radius:999px;padding:6px 13px;cursor:pointer;box-shadow:var(--shadow);transition:border-color .15s,color .15s,transform .1s;
+  }
+  .chip:hover{border-color:var(--primary);color:var(--primary-ink);transform:translateY(-1px)}
+
+  .mode-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px 14px;margin-top:24px}
+  .mode-label{font-size:13px;font-weight:600;color:var(--primary-ink)}
+  .seg{display:inline-flex;background:var(--primary-soft);border-radius:10px;padding:3px;gap:2px}
+  .seg-btn{font-family:var(--sans);font-size:13.5px;font-weight:600;color:var(--muted);padding:7px 14px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s,box-shadow .15s}
+  .seg-btn.active{background:var(--panel);color:var(--primary-ink);box-shadow:var(--shadow)}
+  .mode-help{font-size:12.5px;color:var(--faint);flex-basis:100%;margin-top:-2px}
+
+  .input-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:22px}
+  .count{font-family:var(--mono);font-size:13px;color:var(--muted);margin-right:auto}
+  .count .n{color:var(--ink);font-weight:700}
+  .count .rm{color:var(--faint)}
+
+  button{font-family:var(--sans);cursor:pointer;border:none;background:none;color:inherit}
+  .btn{display:inline-flex;align-items:center;gap:8px;justify-content:center;font-size:14.5px;font-weight:600;padding:11px 18px;border-radius:11px;border:1px solid var(--line-strong);background:var(--panel);color:var(--primary-ink);box-shadow:var(--shadow);transition:transform .12s,box-shadow .15s,border-color .15s,background .15s}
+  .btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-lift)}
+  .btn:active{transform:translateY(0)}
+  .btn:focus-visible{outline:none;box-shadow:0 0 0 3px var(--primary-soft),var(--shadow)}
+  .btn.primary{background:var(--primary);color:#fff;border-color:var(--primary-ink)}
+  .btn.primary:hover{background:var(--primary-ink)}
+  .btn.ghost{background:transparent;box-shadow:none;border-color:transparent;color:var(--muted);padding:11px 12px}
+  .btn.ghost:hover{background:#fff;box-shadow:var(--shadow);color:var(--primary-ink);transform:none}
+  .btn[disabled]{opacity:.4;pointer-events:none}
+  .btn svg{width:16px;height:16px;flex:none}
+  .file-btn{position:relative;overflow:hidden}
+  .file-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+  .err{color:#B23A48;font-size:14px;margin-top:12px;min-height:1.2em;font-weight:500}
+
+  .progress{margin-bottom:20px}
+  .progress-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:12px}
+  .progress-top .step{font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .progress-top .step b{color:var(--ink);font-weight:700}
+  .bar{height:5px;background:var(--line);border-radius:99px;overflow:hidden}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:99px;transition:width .4s cubic-bezier(.2,.7,.3,1)}
+
+  .ask{font-family:var(--display);font-weight:600;font-size:23px;letter-spacing:-.01em;text-align:center;margin:10px 0 20px;overflow-wrap:anywhere}
+
+  .duel{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:0}
+  .option{position:relative;background:var(--panel);border:1.5px solid var(--line);border-radius:var(--radius);min-height:180px;padding:30px 22px 26px;display:flex;align-items:center;justify-content:center;text-align:center;box-shadow:var(--shadow);cursor:pointer;transition:transform .16s cubic-bezier(.2,.7,.3,1),box-shadow .16s,border-color .16s,background .16s;-webkit-tap-highlight-color:transparent}
+  .option:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift);border-color:var(--line-strong)}
+  .option:focus-visible{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft),var(--shadow-lift)}
+  .option .txt{font-family:var(--display);font-weight:500;font-size:20px;line-height:1.3;color:var(--ink);overflow-wrap:anywhere}
+  .option.anchor{border-color:var(--line-strong)}
+  .option .tag{position:absolute;top:12px;left:14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--primary);background:var(--primary-soft);border-radius:6px;padding:3px 8px}
+  .option .side{position:absolute;top:12px;right:14px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--faint);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+  .option.chosen{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-6px) scale(1.015);box-shadow:0 6px 12px rgba(198,127,32,.14),0 26px 50px -18px rgba(198,127,32,.5)}
+  .option.chosen .txt{color:var(--accent-deep)}
+  .option.anchor.chosen .tag{background:var(--accent-soft);color:var(--accent-deep)}
+  .option.chosen .side{border-color:var(--accent);color:var(--accent-deep)}
+
+  .pivot{display:flex;flex-direction:column;align-items:center;justify-content:center;width:74px;position:relative}
+  .pivot .rod{position:absolute;top:14px;bottom:14px;width:1.5px;background:var(--line-strong)}
+  .pivot .hub{position:relative;z-index:1;width:46px;height:46px;border-radius:50%;background:var(--panel);border:1.5px solid var(--line-strong);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-style:italic;font-weight:700;font-size:15px;color:var(--muted);box-shadow:var(--shadow);transition:transform .18s cubic-bezier(.2,.7,.3,1),border-color .18s,color .18s}
+  .duel.tip-left .pivot .hub{transform:translateX(-4px) rotate(-12deg);border-color:var(--accent);color:var(--accent-deep)}
+  .duel.tip-right .pivot .hub{transform:translateX(4px) rotate(12deg);border-color:var(--accent);color:var(--accent-deep)}
+  .duel.tip-equal .pivot .hub{border-color:var(--primary);color:var(--primary)}
+
+  .compare-actions{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:22px}
+  .equal-btn{display:inline-flex;align-items:center;gap:9px;font-family:var(--sans);font-size:14.5px;font-weight:600;padding:11px 22px;border-radius:11px;border:1px solid var(--line-strong);background:var(--panel);color:var(--primary-ink);box-shadow:var(--shadow);cursor:pointer;transition:transform .12s,box-shadow .15s,border-color .15s,background .15s}
+  .equal-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-lift);border-color:var(--primary);background:var(--primary-soft)}
+  .equal-btn:focus-visible{outline:none;box-shadow:0 0 0 3px var(--primary-soft),var(--shadow)}
+  .equal-btn.chosen{border-color:var(--primary);background:var(--primary);color:#fff}
+  .kbd-hint{text-align:center;margin-top:18px;font-family:var(--mono);font-size:12px;color:var(--faint)}
+  .kbd-hint kbd{background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--muted);font-family:var(--mono);font-size:11px}
+
+  .results-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:2px}
+  .results-title{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.02em}
+  .results-q{color:var(--muted);font-size:14px;margin:2px 0 0}
+  .done-stat{font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .done-stat b{color:var(--ink)}
+  .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:18px 0 20px}
+  .toolbar .spacer{margin-left:auto}
+
+  .ranklist{display:flex;flex-direction:column;gap:8px;list-style:none;padding:0;margin:0}
+  .row{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px 14px 14px;box-shadow:var(--shadow);transition:opacity .2s,background .2s,border-color .2s}
+  .row .rank{font-family:var(--mono);font-weight:700;font-size:16px;color:var(--primary);min-width:2.4ch;text-align:right}
+  .row .body{min-width:0}
+  .row .name{font-family:var(--display);font-weight:500;font-size:17px;color:var(--ink);overflow-wrap:anywhere;transition:color .2s}
+  .row .meter{height:5px;background:var(--line);border-radius:99px;margin-top:8px;overflow:hidden;max-width:340px}
+  .row .meter > i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:99px}
+  .row .score{font-family:var(--mono);font-weight:500;font-size:15px;color:var(--muted);min-width:4ch;text-align:right}
+  .row .score small{font-size:10px;color:var(--faint);display:block;font-weight:400;letter-spacing:.04em}
+  .row.tie .rank::after{content:"=";color:var(--faint);font-weight:400;margin-left:1px}
+
+  .check{position:relative;width:26px;height:26px;flex:none;cursor:pointer}
+  .check input{position:absolute;inset:0;opacity:0;cursor:pointer;margin:0}
+  .check .box{width:26px;height:26px;border:1.5px solid var(--line-strong);border-radius:8px;background:var(--panel);display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s}
+  .check .box svg{width:15px;height:15px;stroke:#fff;stroke-width:3;fill:none;opacity:0;transform:scale(.6);transition:opacity .15s,transform .15s}
+  .check input:hover + .box{border-color:var(--primary)}
+  .check input:focus-visible + .box{box-shadow:0 0 0 3px var(--primary-soft)}
+  .check input:checked + .box{background:var(--primary);border-color:var(--primary)}
+  .check input:checked + .box svg{opacity:1;transform:scale(1)}
+  .row.done{opacity:.55;background:#F2F5F8}
+  .row.done .name{text-decoration:line-through;color:var(--muted)}
+  .row.hidden{display:none}
+
+  .empty{color:var(--muted);font-size:15px;text-align:center;padding:30px;background:var(--panel);border:1px dashed var(--line-strong);border-radius:12px}
+  .footnote{margin-top:26px;color:var(--faint);font-size:12.5px;line-height:1.6;max-width:64ch}
+
+  @media (max-width:560px){
+    .wrap{padding:24px 16px 64px}
+    .duel{grid-template-columns:1fr;gap:0}
+    .pivot{width:auto;height:56px;flex-direction:row}
+    .pivot .rod{top:auto;bottom:auto;left:24px;right:24px;height:1.5px;width:auto}
+    .duel.tip-left .pivot .hub{transform:translateY(-4px) rotate(-12deg)}
+    .duel.tip-right .pivot .hub{transform:translateY(4px) rotate(12deg)}
+    .option{min-height:118px}
+    .row{grid-template-columns:auto 1fr auto;gap:12px}
+    .row .score{grid-column:2 / 3;grid-row:2;text-align:left;margin-top:2px}
+    .row .meter{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ INPUT ============ -->
+  <section id="screen-input" class="screen active">
+    <div class="mast">
+      <div class="mark">Ver<span class="vs">s</span>us</div>
+      <div class="tag-lede">pairwise ranking</div>
+    </div>
+    <p class="lede">Put anything in a list — tasks, restaurants, ideas — and rank it by choosing between two at a time. You answer roughly n·log n questions, not every pair, so 25 items takes about 85 clicks instead of 300.</p>
+
+    <div class="field-label"><span>Your list</span><span class="hint">one item per line</span></div>
+    <textarea id="items" spellcheck="false" placeholder="Ship the onboarding fix&#10;Reply to the investor email&#10;Fix the flaky test&#10;Write the launch post&#10;Refactor the auth module"></textarea>
+
+    <div class="field-label spaced"><span>Your question</span><span class="hint">shown above every pair</span></div>
+    <input id="question" class="q-input" type="text" value="Which do you prefer?" placeholder="Which do you prefer?" spellcheck="false" autocomplete="off">
+    <div class="chips" id="chips">
+      <button class="chip" type="button">Which should you do first?</button>
+      <button class="chip" type="button">Which is most important?</button>
+      <button class="chip" type="button">Which do you prefer?</button>
+    </div>
+
+    <div class="mode-row">
+      <span class="mode-label">Comparison style</span>
+      <div class="seg" id="seg">
+        <button class="seg-btn active" data-mode="binary" type="button">Fewest questions</button>
+        <button class="seg-btn" data-mode="sequential" type="button">Top-down</button>
+      </div>
+      <span class="mode-help" id="mode-help">Halving search — the fewest questions (roughly 85–95 for 25 items).</span>
+    </div>
+
+    <div class="input-row">
+      <div class="count" id="count"></div>
+      <label class="btn file-btn" title="Load a .txt file, one item per line">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
+        Load .txt
+        <input type="file" id="file" accept=".txt,text/plain">
+      </label>
+      <button class="btn primary" id="start">
+        Start ranking
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+      </button>
+    </div>
+    <div class="err" id="input-err"></div>
+  </section>
+
+  <!-- ============ COMPARE ============ -->
+  <section id="screen-compare" class="screen">
+    <div class="progress">
+      <div class="progress-top">
+        <span class="step">Placing item <b id="item-n">1</b> of <span id="item-total">1</span></span>
+        <span class="step"><span id="step-n">1</span> / ~<span id="step-total">1</span> comparisons</span>
+      </div>
+      <div class="bar"><i id="bar-fill" style="width:0%"></i></div>
+    </div>
+
+    <div class="ask" id="ask">Which do you prefer?</div>
+
+    <div class="duel" id="duel">
+      <button class="option anchor" id="opt-left" aria-label="The item you are placing">
+        <span class="tag">placing</span>
+        <span class="txt" id="txt-left"></span>
+      </button>
+      <div class="pivot"><span class="rod"></span><span class="hub">vs</span></div>
+      <button class="option" id="opt-right" aria-label="Compare against this ranked item">
+        <span class="side" id="side-right">#1</span>
+        <span class="txt" id="txt-right"></span>
+      </button>
+    </div>
+
+    <div class="compare-actions">
+      <button class="btn ghost" id="back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>
+        Back
+      </button>
+      <button class="equal-btn" id="equal">Too close — equal</button>
+    </div>
+    <div class="kbd-hint">
+      <kbd>←</kbd> placing item &nbsp; <kbd>→</kbd> ranked item &nbsp; <kbd>↓</kbd> equal &nbsp; <kbd>⌫</kbd> back
+    </div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section id="screen-results" class="screen">
+    <div class="results-head">
+      <div>
+        <div class="results-title">Your ranking</div>
+        <p class="results-q" id="results-q"></p>
+      </div>
+      <div class="done-stat" id="done-stat"></div>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="toggle-checked">Show checked items</button>
+      <button class="btn ghost" id="back-results">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>
+        Undo last
+      </button>
+      <div class="spacer"></div>
+      <button class="btn" id="csv">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        Download CSV
+      </button>
+      <button class="btn" id="restart">Start over</button>
+    </div>
+
+    <ol class="ranklist" id="ranklist"></ol>
+
+    <p class="footnote">
+      Order comes from your choices (a comparison sort — every item is distinct unless you marked a pair equal).
+      <b>Score</b> is a Bradley–Terry strength estimate from the same choices, smoothed to respect your order and shifted so the lowest reads at least 1; read the gaps between bars as rough confidence, not exact distance. Tied scores mean two items were too close for the data to separate. Checked items are hidden by default.
+    </p>
+  </section>
+
+</div>
+
+<script>
+"use strict";
+(function(){
+  const $ = id => document.getElementById(id);
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const DEFAULT_Q = "Which do you prefer?";
+
+  const state = {
+    items: [], question: DEFAULT_Q, mode: "binary",
+    sorted: [], remaining: [], current: null,
+    lo: 0, hi: 0, pos: 0,                 // lo/hi = binary bounds; pos = sequential cursor
+    comparisons: [], history: [], estTotal: 1,
+    results: [], showChecked: false, locked: false,
+  };
+
+  // ---------- Input parsing ----------
+  function parseItems(text){
+    const seen = new Set(); const out = []; let dupes = 0;
+    text.split(/\r?\n/).forEach(line=>{
+      const t = line.replace(/\s+/g," ").trim();
+      if(!t) return;
+      const key = t.toLowerCase();
+      if(seen.has(key)){ dupes++; return; }
+      seen.add(key); out.push(t);
+    });
+    return { items: out, dupes };
+  }
+  function refreshCount(){
+    const { items, dupes } = parseItems($("items").value);
+    let s = `<span class="n">${items.length}</span> item${items.length===1?"":"s"}`;
+    if(dupes) s += ` <span class="rm">· ${dupes} duplicate${dupes===1?"":"s"} removed</span>`;
+    $("count").innerHTML = s;
+  }
+  $("items").addEventListener("input", refreshCount);
+  $("file").addEventListener("change", e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = () => { $("items").value = r.result; refreshCount(); $("input-err").textContent=""; };
+    r.onerror = () => { $("input-err").textContent = "Couldn't read that file — try a plain .txt."; };
+    r.readAsText(f); e.target.value = "";
+  });
+  document.querySelectorAll("#chips .chip").forEach(ch=>{
+    ch.addEventListener("click", ()=>{ $("question").value = ch.textContent; $("question").focus(); });
+  });
+  document.querySelectorAll("#seg .seg-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll("#seg .seg-btn").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active"); state.mode = btn.dataset.mode;
+      $("mode-help").textContent = state.mode==="sequential"
+        ? "Walks down your ranking from the top, stopping when the item settles — more questions but predictable (roughly 170 for 25 items)."
+        : "Halving search — the fewest questions (roughly 85–95 for 25 items).";
+    });
+  });
+
+  // expected comparison count, per mode (used only for the progress estimate)
+  function estComparisons(n, mode){
+    let c = 0;
+    for(let k=1;k<n;k++) c += (mode==="sequential") ? (k/2 + k/(k+1)) : Math.ceil(Math.log2(k+1));
+    return Math.max(1, Math.round(c));
+  }
+
+  // ---------- Sort engine (binary OR sequential insertion, as a resumable machine) ----------
+  function beginSort(){
+    const { items } = parseItems($("items").value);
+    if(items.length < 2){ $("input-err").textContent = "Add at least two items to compare."; return; }
+    const q = $("question").value.replace(/\s+/g," ").trim();
+    state.question = q || DEFAULT_Q;
+    state.items = items.slice();
+    state.sorted = [items[0]];
+    state.remaining = items.slice(1);
+    state.comparisons = []; state.history = [];
+    state.estTotal = estComparisons(items.length, state.mode);
+    nextItem();
+    show("compare");
+    renderCompare();
+  }
+  function nextItem(){
+    if(state.remaining.length === 0){ state.current = null; return finishSort(); }
+    state.current = state.remaining.shift();
+    state.lo = 0; state.hi = state.sorted.length; state.pos = 0;
+    return false;
+  }
+  function currentPair(){
+    if(state.current == null) return null;
+    const idx = state.mode === "sequential" ? state.pos : (state.lo + state.hi) >> 1;
+    return { a: state.current, b: state.sorted[idx], idx };
+  }
+  function snapshot(){
+    state.history.push(JSON.stringify({
+      sorted:state.sorted, remaining:state.remaining, current:state.current,
+      lo:state.lo, hi:state.hi, pos:state.pos, comparisons:state.comparisons
+    }));
+  }
+  function applyAnswer(res){                 // res: 'a'(placing higher) | 'b'(ranked higher) | 'draw'
+    const p = currentPair(); if(!p) return;
+    snapshot();
+    state.comparisons.push({ a: state.current, b: state.sorted[p.idx], result: res });
+    if(state.mode === "sequential"){
+      if(res === "draw"){ state.sorted.splice(p.idx + 1, 0, state.current); return nextItem(); }
+      if(res === "a"){ state.sorted.splice(p.idx, 0, state.current); return nextItem(); } // above this rank
+      state.pos++;                                                                        // below → keep walking
+      if(state.pos >= state.sorted.length){ state.sorted.push(state.current); return nextItem(); }
+      return false;
+    }
+    // binary
+    if(res === "draw"){ state.sorted.splice(p.idx + 1, 0, state.current); return nextItem(); }
+    if(res === "a") state.hi = p.idx; else state.lo = p.idx + 1;
+    if(state.lo >= state.hi){ state.sorted.splice(state.lo, 0, state.current); return nextItem(); }
+    return false;
+  }
+  function undo(){
+    if(state.history.length === 0) return;
+    Object.assign(state, JSON.parse(state.history.pop()));
+    show("compare"); renderCompare();
+  }
+
+  // ---------- Bradley–Terry (MM / Zermelo) + phantom regularization ----------
+  const REG = 1.0, SPREAD = 25, ITERS = 500;
+  function bradleyTerry(items, comparisons){
+    const idx = new Map(items.map((it,i)=>[it,i])); const n = items.length;
+    const W = new Array(n).fill(REG/2); const games = Array.from({length:n},()=>new Map());
+    for(const {a,b,result} of comparisons){
+      const ia = idx.get(a), ib = idx.get(b);
+      games[ia].set(ib,(games[ia].get(ib)||0)+1); games[ib].set(ia,(games[ib].get(ia)||0)+1);
+      if(result==="a") W[ia]+=1; else if(result==="b") W[ib]+=1; else { W[ia]+=0.5; W[ib]+=0.5; }
+    }
+    let p = new Array(n).fill(1);
+    for(let t=0;t<ITERS;t++){
+      const np = new Array(n); let maxd=0;
+      for(let i=0;i<n;i++){ let d = REG/(p[i]+1); for(const [j,nij] of games[i]) d += nij/(p[i]+p[j]); np[i] = W[i]/d; }
+      const gm = Math.exp(np.reduce((s,v)=>s+Math.log(v),0)/n);
+      for(let i=0;i<n;i++){ np[i]/=gm; maxd=Math.max(maxd,Math.abs(np[i]-p[i])); }
+      p = np; if(maxd < 1e-12) break;
+    }
+    const beta = p.map(v=>Math.log(v)); const mean = beta.reduce((s,v)=>s+v,0)/n; const rating = {};
+    items.forEach((it,i)=> rating[it] = 100 + SPREAD*(beta[i]-mean));
+    return rating;
+  }
+  function isotonicWeighted(vals, wts){
+    const val=[], wt=[], idxs=[];
+    for(let i=0;i<vals.length;i++){
+      let cv=vals[i], cw=wts[i], ci=[i];
+      while(val.length && val[val.length-1] < cv){
+        const pv=val.pop(), pw=wt.pop(), pi=idxs.pop();
+        cv=(pv*pw + cv*cw)/(pw+cw); cw=pw+cw; ci=pi.concat(ci);
+      }
+      val.push(cv); wt.push(cw); idxs.push(ci);
+    }
+    const out=new Array(vals.length);
+    for(let k=0;k<val.length;k++) for(const i of idxs[k]) out[i]=val[k];
+    return out;
+  }
+  function tieGroups(items, comparisons){
+    const parent = new Map(items.map(it=>[it,it]));
+    const find = x => { while(parent.get(x)!==x){ parent.set(x,parent.get(parent.get(x))); x=parent.get(x);} return x; };
+    const union = (a,b)=>{ const ra=find(a), rb=find(b); if(ra!==rb) parent.set(ra,rb); };
+    comparisons.forEach(c=>{ if(c.result==="draw") union(c.a,c.b); });
+    return find;
+  }
+
+  function finishSort(){
+    const order = state.sorted.slice();
+    const rating0 = bradleyTerry(state.items, state.comparisons);
+    const find = tieGroups(state.items, state.comparisons);
+    const blocks = [];
+    order.forEach(it=>{
+      const last = blocks[blocks.length-1];
+      if(last && find(it)===find(last.items[last.items.length-1])) last.items.push(it);
+      else blocks.push({ items:[it] });
+    });
+    blocks.forEach(b=> b.val = b.items.reduce((s,it)=>s+rating0[it],0)/b.items.length);
+    const pooled = isotonicWeighted(blocks.map(b=>b.val), blocks.map(b=>b.items.length));
+    blocks.forEach((b,i)=> b.score = pooled[i]);
+    const results = []; let pos = 1;
+    blocks.forEach(b=>{
+      const tie = b.items.length > 1;
+      b.items.forEach(it=> results.push({ item:it, rating:b.score, rank:pos, tie, done:false }));
+      pos += b.items.length;
+    });
+    // Lift so the lowest score reads as at least 1 — a uniform shift, so gaps and order are unchanged.
+    const rounded = results.map(r=>Math.round(r.rating));
+    const minScore = Math.min(...rounded);
+    const shift = minScore < 1 ? (1 - minScore) : 0;
+    results.forEach((r,i)=> r.score = rounded[i] + shift);
+    state.results = results;
+    show("results"); renderResults();
+  }
+
+  // ---------- Compare rendering ----------
+  function renderCompare(){
+    const p = currentPair(); if(!p) return;
+    $("ask").textContent = state.question;
+    $("txt-left").textContent = p.a;          // anchor (item being placed) — always left
+    $("txt-right").textContent = p.b;         // ranked item — always right
+    $("side-right").textContent = "#" + (p.idx + 1);
+
+    const placing = Math.min(state.sorted.length + 1, state.items.length);
+    $("item-n").textContent = placing;
+    $("item-total").textContent = state.items.length;
+    const done = state.comparisons.length;
+    $("step-n").textContent = done + 1;
+    $("step-total").textContent = state.estTotal;
+    $("bar-fill").style.width = Math.min(100, Math.round(100 * done / state.estTotal)) + "%";
+
+    $("opt-left").classList.remove("chosen"); $("opt-right").classList.remove("chosen");
+    $("equal").classList.remove("chosen");
+    $("duel").classList.remove("tip-left","tip-right","tip-equal");
+    $("back").disabled = state.history.length === 0;
+    state.locked = false;
+  }
+  function choose(side){                       // side: 'left'|'right'|'equal'  (left=placing item, right=ranked)
+    if(state.locked) return;
+    if(state.current == null) return;
+    let res, tip;
+    if(side === "equal"){ res = "draw"; tip = "tip-equal"; $("equal").classList.add("chosen"); }
+    else if(side === "left"){ res = "a"; tip = "tip-left"; $("opt-left").classList.add("chosen"); }
+    else { res = "b"; tip = "tip-right"; $("opt-right").classList.add("chosen"); }
+    $("duel").classList.add(tip);
+    state.locked = true;
+    const commit = () => { applyAnswer(res); if(state.current != null) renderCompare(); };
+    if(reduceMotion) commit(); else setTimeout(commit, 150);
+  }
+  $("opt-left").addEventListener("click", ()=>choose("left"));
+  $("opt-right").addEventListener("click", ()=>choose("right"));
+  $("equal").addEventListener("click", ()=>choose("equal"));
+  $("back").addEventListener("click", undo);
+  document.addEventListener("keydown", e=>{
+    if(!$("screen-compare").classList.contains("active")) return;
+    if(e.key==="ArrowLeft"){ e.preventDefault(); choose("left"); }
+    else if(e.key==="ArrowRight"){ e.preventDefault(); choose("right"); }
+    else if(e.key==="ArrowDown"||e.key==="="||e.key.toLowerCase()==="e"){ e.preventDefault(); choose("equal"); }
+    else if(e.key==="Backspace"||e.key.toLowerCase()==="z"){ e.preventDefault(); undo(); }
+  });
+
+  // ---------- Results rendering ----------
+  const CHECK_SVG = '<svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg>';
+  function renderResults(){
+    const list = $("ranklist"); list.innerHTML = "";
+    $("results-q").textContent = state.question;
+    const scores = state.results.map(r=>r.score);
+    const lo = Math.min(...scores), hi = Math.max(...scores);
+    const width = v => 12 + 88 * (hi>lo ? (v - lo)/(hi - lo) : 1);
+
+    const visible = state.results.filter(r=> state.showChecked || !r.done);
+    if(visible.length === 0){
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "Everything's checked off. Use \u201CShow checked items\u201D to see the full ranking.";
+      list.appendChild(li);
+    }
+    state.results.forEach(r=>{
+      const li = document.createElement("li");
+      li.className = "row" + (r.done ? " done" : "") + (r.tie ? " tie" : "");
+      if(r.done && !state.showChecked) li.classList.add("hidden");
+
+      const rank = document.createElement("div"); rank.className = "rank"; rank.textContent = r.rank;
+      const body = document.createElement("div"); body.className = "body";
+      const name = document.createElement("div"); name.className = "name"; name.textContent = r.item;
+      const meter = document.createElement("div"); meter.className = "meter";
+      const fill = document.createElement("i"); fill.style.width = width(r.score) + "%"; meter.appendChild(fill);
+      body.appendChild(name); body.appendChild(meter);
+      const score = document.createElement("div"); score.className = "score";
+      score.innerHTML = r.score + "<small>SCORE</small>";
+      const check = document.createElement("label"); check.className = "check"; check.title = "Mark done";
+      const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = r.done;
+      cb.addEventListener("change", ()=>{ r.done = cb.checked; renderResults(); });
+      const box = document.createElement("span"); box.className = "box"; box.innerHTML = CHECK_SVG;
+      check.appendChild(cb); check.appendChild(box);
+
+      li.appendChild(rank); li.appendChild(body); li.appendChild(score); li.appendChild(check);
+      list.appendChild(li);
+    });
+    const doneCount = state.results.filter(r=>r.done).length;
+    $("done-stat").innerHTML = `<b>${doneCount}</b> of <b>${state.results.length}</b> done`;
+    $("toggle-checked").textContent = state.showChecked ? "Hide checked items" : "Show checked items";
+    $("back-results").disabled = state.history.length === 0;
+  }
+  $("toggle-checked").addEventListener("click", ()=>{ state.showChecked = !state.showChecked; renderResults(); });
+  $("back-results").addEventListener("click", undo);
+  $("restart").addEventListener("click", ()=>{ show("input"); refreshCount(); });
+
+  // ---------- CSV export (question lands in E1) ----------
+  function csvCell(v){ v = String(v); return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; }
+  function downloadCSV(){
+    const rows = [["Rank","Item","Score","Done", state.question]];   // 5th header cell => E1
+    state.results.forEach(r=> rows.push([r.rank, r.item, r.score, r.done ? "yes" : "no"]));
+    const csv = rows.map(row=> row.map(csvCell).join(",")).join("\r\n");
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "ranking.csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  }
+  $("csv").addEventListener("click", downloadCSV);
+
+  // ---------- Screens ----------
+  function show(name){
+    ["input","compare","results"].forEach(s=> $("screen-"+s).classList.toggle("active", s===name));
+    window.scrollTo({top:0, behavior: reduceMotion ? "auto" : "smooth"});
+  }
+  $("start").addEventListener("click", beginSort);
+  refreshCount();
+})();
+</script>
+</body>
+</html>
