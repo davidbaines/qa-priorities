@@ -5,7 +5,7 @@ tasks, restaurants, features — anything — answer a series of "this or that"
 questions, and get a full ranking with a strength score for each item. It's a
 single HTML file: no build step, no server, and nothing leaves your browser.
 
-**Live:** `https://<your-username>.github.io/versus/`
+**Live:** [https://davidbaines.github.io/versus/](https://davidbaines.github.io/versus/)
 
 ## Why pairwise?
 
@@ -62,14 +62,6 @@ Google Fonts for typography, with a system-font fallback if it's blocked.
 ## Run it locally
 
 Open `index.html` in any modern browser. No install, no build.
-
-## Hosting (GitHub Pages)
-
-This repo is meant to be served with GitHub Pages: in the repo, go to
-**Settings → Pages → Build and deployment**, set the source to **Deploy from a
-branch**, choose the `main` branch and the `/ (root)` folder, and save. After a
-minute the site is live at `https://<your-username>.github.io/versus/`. Any push
-to `main` redeploys automatically.
 
 ## License
 
