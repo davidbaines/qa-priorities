@@ -1,0 +1,27 @@
+// A dark skin. Defines only colours — fonts and sizes are inherited from the
+// fallback style (classic), which is how subset styles work.
+VERSUS.registerStyle("midnight", {
+  id: "midnight",
+  name: "Midnight",
+  colors: {
+    paper: "#101418",
+    paperGlow: "#16202B",
+    panel: "#1A222C",
+    ink: "#E7ECF1",
+    muted: "#9FB0C0",
+    faint: "#64748B",
+    line: "#2A3644",
+    lineStrong: "#3A4A5C",
+    primary: "#3B82F6",
+    primaryInk: "#93B4F8",
+    primarySoft: "#1E2A3D",
+    onPrimary: "#0B1220",
+    accent: "#F59E0B",
+    accentDeep: "#FBBF24",
+    accentSoft: "#33270F",
+    titlePurple: "#C084FC",
+    questionTeal: "#2DD4BF",
+    doneWash: "#151C24",
+    err: "#F87171"
+  }
+});

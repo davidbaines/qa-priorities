@@ -1,0 +1,22 @@
+{
+  "format": "versus-locale",
+  "formatVersion": 1,
+  "locale": {
+    "id": "fr-demo",
+    "name": "Français (démo partielle)",
+    "dir": "ltr",
+    "plural": "one-other",
+    "strings": {
+      "app.title": "Versus — classement par paires",
+      "app.defaultQuestion": "Lequel préférez-vous ?",
+      "input.listLabel": "Votre liste",
+      "input.listHint": "un élément par ligne",
+      "input.questionLabel": "Votre question",
+      "input.start": "Commencer le classement",
+      "compare.back": "Retour",
+      "compare.equal": "Trop proche — égalité",
+      "results.title": "Votre classement",
+      "results.csv": "Télécharger le CSV"
+    }
+  }
+}
