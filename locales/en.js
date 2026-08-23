@@ -61,6 +61,17 @@ VERSUS.registerLocale("en", {
     "results.csvNo": "no",
     "results.csvFilename": "ranking.csv",
 
+    "lists.label": "My lists",
+    "lists.namePlaceholder": "List name",
+    "lists.save": "Save list",
+    "lists.new": "New list",
+    "lists.export": "Export",
+    "lists.delete": "Delete",
+    "lists.confirm": "Sure?",
+    "lists.ranked": "ranked",
+    "lists.saved": "Saved: {name}",
+    "lists.nameNeeded": "Give the list a name first.",
+
     "panel.title": "Customize",
     "panel.close": "Close",
     "panel.language": "Language",

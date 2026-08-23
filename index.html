@@ -202,6 +202,21 @@
   .empty{color:var(--muted);font-size:var(--fs-lede);text-align:center;padding:30px;background:var(--panel);border:1px dashed var(--line-strong);border-radius:12px}
   .footnote{margin-top:26px;color:var(--faint);font-size:var(--fs-fine);line-height:1.6;max-width:64ch}
 
+  .lists-toggle{position:fixed;top:14px;inset-inline-start:14px;width:42px;height:42px;border-radius:50%;background:var(--panel);border:1px solid var(--line-strong);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;z-index:50;transition:color .15s,box-shadow .15s}
+  .lists-toggle:hover{color:var(--primary-ink);box-shadow:var(--shadow-lift)}
+  .lists-toggle svg{width:20px;height:20px}
+  #lists-sidebar{position:fixed;top:0;inset-inline-start:0;height:100%;width:280px;background:var(--panel);border-inline-end:1px solid var(--line);box-shadow:var(--shadow-lift);z-index:55;padding:16px 14px 30px;overflow-y:auto;display:none}
+  #lists-sidebar.open{display:block}
+  .sb-new{width:100%;margin-top:8px}
+  #saved-lists{list-style:none;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:6px}
+  .list-item{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;transition:border-color .15s,box-shadow .15s}
+  .list-item:hover{border-color:var(--line-strong)}
+  .list-item.active{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+  .li-main{flex:1;min-width:0;cursor:pointer}
+  .li-name{font-size:var(--fs-label);font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+  .li-main:hover .li-name{color:var(--primary-ink)}
+  .li-meta{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:1px}
+  @media (min-width:900px){ body.sidebar-open{padding-inline-start:280px} }
   .gear{position:fixed;top:14px;inset-inline-end:14px;width:42px;height:42px;border-radius:50%;background:var(--panel);border:1px solid var(--line-strong);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;z-index:50;transition:color .15s,box-shadow .15s,transform .12s}
   .gear:hover{color:var(--primary-ink);box-shadow:var(--shadow-lift);transform:rotate(20deg)}
   .gear svg{width:20px;height:20px}
@@ -378,6 +393,23 @@
 
 </div>
 
+<button class="lists-toggle" id="lists-toggle" data-i18n-title="lists.label" data-i18n-aria-label="lists.label">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
+</button>
+
+<aside id="lists-sidebar">
+  <div class="panel-head">
+    <span class="panel-title" data-i18n="lists.label"></span>
+    <button class="panel-close" id="lists-close" data-i18n-title="panel.close" data-i18n-aria-label="panel.close">&#215;</button>
+  </div>
+  <div class="save-row">
+    <input id="list-name" class="q-input" type="text" data-i18n-placeholder="lists.namePlaceholder" autocomplete="off">
+    <button class="btn" id="list-save" data-i18n="lists.save"></button>
+  </div>
+  <button class="btn sb-new" id="list-new" data-i18n="lists.new"></button>
+  <ul id="saved-lists"></ul>
+</aside>
+
 <button class="gear" id="gear" data-i18n-title="panel.title" data-i18n-aria-label="panel.title">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
 </button>
@@ -454,7 +486,8 @@
   // Versioned envelopes in localStorage; falls back to an in-memory mirror when
   // storage is disabled (private browsing) or full. Corrupt data is discarded.
   const K_PREFS = "versus.v1.prefs", K_STYLES = "versus.v1.customStyles",
-        K_OVR = "versus.v1.stringOverrides", K_LOCALES = "versus.v1.customLocales";
+        K_OVR = "versus.v1.stringOverrides", K_LOCALES = "versus.v1.customLocales",
+        K_LISTS = "versus.v1.lists", K_WORK = "versus.v1.workspace";
   const STORE = (function(){
     let ok = false;
     try{ localStorage.setItem("versus.probe","1"); localStorage.removeItem("versus.probe"); ok = true; }catch(e){}
@@ -479,7 +512,7 @@
   })();
   let overrides = {};   // {localeId: {key: value}} — the user's personal localization layer
   function saveOverrides(){ STORE.set(K_OVR, {schema:1, overrides}); }
-  function savePrefs(){ STORE.set(K_PREFS, {schema:1, locale:i18n.locale, styleId:theming.styleId}); }
+  function savePrefs(){ STORE.set(K_PREFS, {schema:1, locale:i18n.locale, styleId:theming.styleId, sidebar:sbOpen}); }
   function saveCustomStyles(){
     const styles = {};
     Object.keys(VERSUS.styles).forEach(id=>{ if(VERSUS.styles[id].custom) styles[id] = VERSUS.styles[id]; });
@@ -489,6 +522,15 @@
     const locales = {};
     Object.keys(VERSUS.locales).forEach(id=>{ if(VERSUS.locales[id].custom) locales[id] = VERSUS.locales[id]; });
     STORE.set(K_LOCALES, {schema:1, locales});
+  }
+  let lists = {};   // {id: {id, name, question, items[], results[]|null, createdAt, updatedAt}}
+  function saveLists(){ STORE.set(K_LISTS, {schema:1, lists}); }
+  let workTimer = null;
+  function queueWorkspaceSave(){
+    clearTimeout(workTimer);
+    workTimer = setTimeout(()=>{
+      STORE.set(K_WORK, {schema:1, items:$("items").value, question:$("question").value, mode:state.mode});
+    }, 400);
   }
   let noticeTimer = null;
   function showNotice(msg){
@@ -548,7 +590,7 @@
     document.documentElement.lang = id;
     document.documentElement.dir = loc.dir === "rtl" ? "rtl" : "ltr";
     applyStrings();
-    buildLocaleSelect(); buildThemeControls(); buildOverrideEditor();
+    buildLocaleSelect(); buildThemeControls(); buildOverrideEditor(); buildSavedLists();
     savePrefs();
     return true;
   }
@@ -754,12 +796,8 @@
       const li = document.createElement("li"); li.className = "style-item";
       const span = document.createElement("span"); span.className = "style-item-name";
       span.textContent = VERSUS.styles[id].name || id;
-      const apply = document.createElement("button"); apply.className = "mini-btn";
-      apply.textContent = t("panel.apply");
-      apply.addEventListener("click", ()=> applyStyle(id));
-      const del = document.createElement("button"); del.className = "mini-btn danger";
-      del.textContent = t("panel.delete");
-      del.addEventListener("click", ()=> deleteStyle(id));
+      const apply = miniBtn(t("panel.apply"), ()=> applyStyle(id));
+      const del = miniBtn(t("panel.delete"), ()=> deleteStyle(id), "danger");
       li.appendChild(span); li.appendChild(apply); li.appendChild(del);
       ul.appendChild(li);
     });
@@ -789,6 +827,7 @@
       if(!data || typeof data !== "object" || (data.formatVersion || 1) > 1) return shareMsg(t("panel.importErr"));
       if(data.format === "versus-style" && data.style) return importStyle(data.style);
       if(data.format === "versus-locale" && data.locale) return importLocale(data.locale);
+      if(data.format === "versus-list" && data.list) return importList(data.list);
       shareMsg(t("panel.importErr"));
     };
     r.onerror = ()=> shareMsg(t("panel.importErr"));
@@ -941,6 +980,144 @@
     downloadBlob(makeZip(files), "application/zip", "versus.zip");
   }
 
+  // ---------- saved lists (sidebar) ----------
+  function uniqueListId(base){ let id = base, n = 1; while(lists[id]) id = base + "-" + (++n); return id; }
+  const sameItems = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+  function snapshotResults(){
+    return state.results.map(r => ({item:r.item, rank:r.rank, score:r.score, tie:!!r.tie, done:!!r.done}));
+  }
+  function saveCurrentList(name){
+    let id = Object.keys(lists).find(k => lists[k].name === name) || null;
+    const now = new Date().toISOString();
+    const created = (id && lists[id].createdAt) || now;
+    if(!id) id = uniqueListId(slug(name));
+    const onResults = $("screen-results").classList.contains("active") && state.results.length;
+    const items = onResults ? state.items.slice() : parseItems($("items").value).items;
+    const question = onResults ? state.question
+      : ($("question").value.replace(/\s+/g," ").trim() || t("app.defaultQuestion"));
+    let results = null;
+    if(onResults) results = snapshotResults();
+    else if(state.listId === id && lists[id] && lists[id].results && sameItems(items, lists[id].items))
+      results = lists[id].results;   // saving unchanged inputs keeps the stored ranking
+    lists[id] = {id, name, question, items, results, createdAt: created, updatedAt: now};
+    state.listId = id;
+    saveLists(); buildSavedLists();
+    showNotice(t("lists.saved", {name}));
+  }
+  // A loaded list stays connected: finished rankings and done-ticks write back automatically.
+  function syncLoadedList(){
+    const l = state.listId && lists[state.listId];
+    if(!l) return;
+    l.items = state.items.slice();
+    l.question = state.question;
+    l.results = snapshotResults();
+    l.updatedAt = new Date().toISOString();
+    saveLists(); buildSavedLists();
+  }
+  function loadList(id){
+    const l = lists[id]; if(!l) return;
+    state.listId = id;
+    $("items").value = l.items.join("\n");
+    $("question").value = l.question || "";
+    $("list-name").value = l.name;
+    refreshCount(); queueWorkspaceSave();
+    if(l.results && l.results.length){
+      state.items = l.items.slice();
+      state.question = l.question || t("app.defaultQuestion");
+      state.results = l.results.map(r => Object.assign({}, r));
+      state.comparisons = []; state.history = []; state.current = null;
+      show("results"); renderResults();
+    } else {
+      show("input");
+    }
+    buildSavedLists();
+    if(matchMedia("(max-width:899px)").matches) setSidebar(false);
+  }
+  function newList(){
+    state.listId = null;
+    state.results = []; state.comparisons = []; state.history = []; state.current = null;
+    $("items").value = ""; $("question").value = t("app.defaultQuestion"); $("list-name").value = "";
+    refreshCount(); queueWorkspaceSave();
+    show("input"); buildSavedLists();
+  }
+  function miniBtn(label, fn, cls){
+    const b = document.createElement("button");
+    b.className = "mini-btn" + (cls ? " " + cls : "");
+    b.textContent = label;
+    b.addEventListener("click", fn);
+    return b;
+  }
+  function buildSavedLists(){
+    const ul = $("saved-lists"); if(!ul) return;
+    ul.innerHTML = "";
+    const ids = Object.keys(lists).sort((a,b)=> String(lists[b].updatedAt||"").localeCompare(String(lists[a].updatedAt||"")));
+    ids.forEach(id=>{
+      const l = lists[id];
+      const li = document.createElement("li");
+      li.className = "list-item" + (id === state.listId ? " active" : "");
+      const main = document.createElement("div"); main.className = "li-main";
+      const name = document.createElement("div"); name.className = "li-name"; name.textContent = l.name;
+      const meta = document.createElement("div"); meta.className = "li-meta";
+      meta.textContent = t(pluralKey("input.countItems", l.items.length), {n: l.items.length})
+        + (l.results ? " · " + t("lists.ranked") : "");
+      main.appendChild(name); main.appendChild(meta);
+      main.addEventListener("click", ()=> loadList(id));
+      const ex = miniBtn(t("lists.export"), ()=> exportList(id));
+      const del = miniBtn(t("lists.delete"), ()=>{
+        if(!del.dataset.armed){
+          del.dataset.armed = "1"; del.textContent = t("lists.confirm");
+          setTimeout(()=>{ if(del.isConnected){ delete del.dataset.armed; del.textContent = t("lists.delete"); } }, 2500);
+          return;
+        }
+        delete lists[id];
+        if(state.listId === id) state.listId = null;
+        saveLists(); buildSavedLists();
+      }, "danger");
+      li.appendChild(main); li.appendChild(ex); li.appendChild(del);
+      ul.appendChild(li);
+    });
+  }
+  let sbOpen = false;
+  function setSidebar(open){
+    sbOpen = open;
+    $("lists-sidebar").classList.toggle("open", open);
+    document.body.classList.toggle("sidebar-open", open);
+    savePrefs();
+  }
+  function exportList(id){
+    const l = lists[id]; if(!l) return;
+    const out = {name:l.name, question:l.question, items:l.items, results:l.results,
+                 createdAt:l.createdAt, updatedAt:l.updatedAt};
+    downloadBlob(JSON.stringify({format:"versus-list", formatVersion:1, list:out}, null, 2),
+      "application/json", slug(l.name) + ".versus-list.json");
+  }
+  function importList(raw){
+    let name = String(raw.name || "list");
+    const items = Array.isArray(raw.items)
+      ? parseItems(raw.items.filter(v => typeof v === "string").join("\n")).items
+      : [];
+    if(items.length === 0) return shareMsg(t("panel.importErr"));
+    const question = typeof raw.question === "string" ? raw.question : "";
+    let results = null, ignored = 0;
+    if(Array.isArray(raw.results) && raw.results.length === items.length){
+      const itemSet = new Set(items);
+      const rows = raw.results.filter(r => r && typeof r === "object" && itemSet.has(r.item)
+        && Number.isFinite(r.rank) && Number.isFinite(r.score));
+      if(rows.length === items.length)
+        results = rows.map(r => ({item:r.item, rank:r.rank, score:r.score, tie:!!r.tie, done:!!r.done}))
+                      .sort((a,b) => a.rank - b.rank);
+      else ignored++;
+    } else if(raw.results != null) ignored++;
+    while(Object.keys(lists).some(k => lists[k].name === name)) name += " (2)";
+    const id = uniqueListId(slug(name));
+    const now = new Date().toISOString();
+    lists[id] = {id, name, question, items, results,
+      createdAt: typeof raw.createdAt === "string" ? raw.createdAt : now, updatedAt: now};
+    saveLists(); buildSavedLists();
+    const msg = t("panel.imported", {name}) + (ignored ? " " + t("panel.importIgnored", {n:ignored}) : "");
+    shareMsg(msg); showNotice(msg);
+  }
+
   // ---------- per-string override editor ("personal localization") ----------
   function buildOverrideEditor(){
     const list = $("ovr-list"); if(!list) return;
@@ -975,7 +1152,7 @@
   }
 
   const state = {
-    items: [], question: "", mode: "binary",
+    items: [], question: "", mode: "binary", listId: null,
     sorted: [], remaining: [], current: null,
     lo: 0, hi: 0, pos: 0,                 // lo/hi = binary bounds; pos = sequential cursor
     comparisons: [], history: [], estTotal: 1,
@@ -1136,6 +1313,7 @@
     const shift = minScore < 1 ? (1 - minScore) : 0;
     results.forEach((r,i)=> r.score = rounded[i] + shift);
     state.results = results;
+    syncLoadedList();
     show("results"); renderResults();
   }
 
@@ -1215,7 +1393,7 @@
       score.innerHTML = r.score + "<small>" + esc(t("results.scoreLabel")) + "</small>";
       const check = document.createElement("label"); check.className = "check"; check.title = t("results.markDone");
       const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = r.done;
-      cb.addEventListener("change", ()=>{ r.done = cb.checked; renderResults(); });
+      cb.addEventListener("change", ()=>{ r.done = cb.checked; syncLoadedList(); renderResults(); });
       const box = document.createElement("span"); box.className = "box"; box.innerHTML = CHECK_SVG;
       check.appendChild(cb); check.appendChild(box);
 
@@ -1285,6 +1463,17 @@
     const savedOvr = STORE.get(K_OVR, null);
     if(savedOvr && savedOvr.overrides) overrides = savedOvr.overrides;
     else if(cfg.overrides) overrides = cfg.overrides;
+    const savedLists = STORE.get(K_LISTS, null);
+    if(savedLists && savedLists.lists) lists = savedLists.lists;
+    const work = STORE.get(K_WORK, null);
+    if(work){
+      if(typeof work.items === "string" && work.items) $("items").value = work.items;
+      if(typeof work.question === "string" && work.question) $("question").value = work.question;
+      if(work.mode === "sequential" || work.mode === "binary"){
+        state.mode = work.mode;
+        document.querySelectorAll("#seg .seg-btn").forEach(b=> b.classList.toggle("active", b.dataset.mode === state.mode));
+      }
+    }
     const prefs = STORE.get(K_PREFS, {});
 
     const localeIds = Object.keys(VERSUS.locales), styleIds = Object.keys(VERSUS.styles);
@@ -1292,7 +1481,8 @@
     theming.fallbackId = pick(cfg.fallbackStyle || VERSUS.fallbackStyle, styleIds);
 
     // listeners
-    $("items").addEventListener("input", refreshCount);
+    $("items").addEventListener("input", ()=>{ refreshCount(); queueWorkspaceSave(); });
+    $("question").addEventListener("input", queueWorkspaceSave);
     $("file").addEventListener("change", e=>{
       const f = e.target.files[0]; if(!f) return;
       const r = new FileReader();
@@ -1301,21 +1491,29 @@
       r.readAsText(f); e.target.value = "";
     });
     document.querySelectorAll("#chips .chip").forEach(ch=>{
-      ch.addEventListener("click", ()=>{ $("question").value = ch.textContent; $("question").focus(); });
+      ch.addEventListener("click", ()=>{ $("question").value = ch.textContent; $("question").focus(); queueWorkspaceSave(); });
     });
     document.querySelectorAll("#seg .seg-btn").forEach(btn=>{
       btn.addEventListener("click", ()=>{
         document.querySelectorAll("#seg .seg-btn").forEach(b=>b.classList.remove("active"));
         btn.classList.add("active"); state.mode = btn.dataset.mode;
-        renderModeHelp();
+        renderModeHelp(); queueWorkspaceSave();
       });
+    });
+    $("lists-toggle").addEventListener("click", ()=> setSidebar(!sbOpen));
+    $("lists-close").addEventListener("click", ()=> setSidebar(false));
+    $("list-new").addEventListener("click", newList);
+    $("list-save").addEventListener("click", ()=>{
+      const name = $("list-name").value.replace(/\s+/g," ").trim();
+      if(!name){ showNotice(t("lists.nameNeeded")); $("list-name").focus(); return; }
+      saveCurrentList(name);
     });
     $("opt-anchor").addEventListener("click", ()=>choose("anchor"));
     $("opt-ranked").addEventListener("click", ()=>choose("ranked"));
     $("equal").addEventListener("click", ()=>choose("equal"));
     $("back").addEventListener("click", undo);
     document.addEventListener("keydown", e=>{
-      if(e.target instanceof Element && e.target.closest("input,textarea,select,#customize")) return;
+      if(e.target instanceof Element && e.target.closest("input,textarea,select,#customize,#lists-sidebar,#lists-toggle,#gear")) return;
       if(!$("screen-compare").classList.contains("active")) return;
       // Arrow keys are physical: ← always picks the card on the left of the screen.
       const rtl = document.documentElement.dir === "rtl";
@@ -1353,6 +1551,7 @@
 
     applyStyle(pick(prefs.styleId || cfg.defaultStyle || VERSUS.defaultStyle, styleIds));
     applyLocale(pick(prefs.locale || cfg.defaultLocale || VERSUS.defaultLocale, localeIds));
+    setSidebar(prefs.sidebar != null ? !!prefs.sidebar : matchMedia("(min-width:900px)").matches);
     document.documentElement.classList.remove("boot");
     if(!STORE.ok) showNotice(t("panel.storageWarn"));
   }
