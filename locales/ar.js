@@ -61,6 +61,17 @@ VERSUS.registerLocale("ar", {
     "results.csvNo": "لا",
     "results.csvFilename": "ranking.csv",
 
+    "lists.label": "قوائمي",
+    "lists.namePlaceholder": "اسم القائمة",
+    "lists.save": "حفظ القائمة",
+    "lists.new": "قائمة جديدة",
+    "lists.export": "تصدير",
+    "lists.delete": "حذف",
+    "lists.confirm": "متأكد؟",
+    "lists.ranked": "مُرتَّبة",
+    "lists.saved": "تم الحفظ: {name}",
+    "lists.nameNeeded": "أعطِ القائمة اسمًا أولاً.",
+
     "panel.title": "تخصيص",
     "panel.close": "إغلاق",
     "panel.language": "اللغة",
