@@ -146,6 +146,11 @@
   .option .txt{font-family:var(--display);font-weight:500;font-size:var(--fs-option);line-height:1.3;color:var(--ink);overflow-wrap:anywhere}
   .option.anchor{border-color:var(--line-strong)}
   .option .tag{position:absolute;top:12px;inset-inline-start:14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--primary);background:var(--primary-soft);border-radius:6px;padding:3px 8px}
+  /* Simple Sort: no ranked/placing semantics — both cards show original list position, no equal option */
+  #side-anchor{display:none}
+  #screen-compare.simple #side-anchor{display:block}
+  #screen-compare.simple .option .tag{display:none}
+  #screen-compare.simple .equal-btn{display:none}
   .option .side{position:absolute;top:12px;inset-inline-end:14px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--faint);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
   .option.chosen{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-6px) scale(1.015);box-shadow:0 6px 12px rgba(198,127,32,.14),0 26px 50px -18px rgba(198,127,32,.5)}
   .option.chosen .txt{color:var(--accent-deep)}
@@ -301,6 +306,7 @@
       <div class="seg" id="seg">
         <button class="seg-btn active" data-mode="binary" type="button" data-i18n="input.modeBinary"></button>
         <button class="seg-btn" data-mode="sequential" type="button" data-i18n="input.modeSequential"></button>
+        <button class="seg-btn" data-mode="simple" type="button" data-i18n="input.modeSimple"></button>
       </div>
       <span class="mode-help" id="mode-help"></span>
     </div>
@@ -339,6 +345,7 @@
     <div class="duel" id="duel">
       <button class="option anchor" id="opt-anchor" data-i18n-aria-label="compare.ariaAnchor">
         <span class="tag" data-i18n="compare.placingTag"></span>
+        <span class="side" id="side-anchor"></span>
         <span class="txt" id="txt-anchor"></span>
       </button>
       <div class="pivot"><span class="rod"></span><span class="hub">vs</span></div>
@@ -355,7 +362,7 @@
       </button>
       <button class="equal-btn" id="equal" data-i18n="compare.equal"></button>
     </div>
-    <div class="kbd-hint" data-i18n-html="compare.kbdHint"></div>
+    <div class="kbd-hint" id="kbd-hint-box" data-i18n-html="compare.kbdHint"></div>
   </section>
 
   <!-- ============ RESULTS ============ -->
@@ -579,8 +586,8 @@
     const q = $("question");
     if(q.value === "" || q.value === lastDefaultQ) q.value = t("app.defaultQuestion");
     lastDefaultQ = t("app.defaultQuestion");
-    renderModeHelp(); refreshCount();
-    if($("screen-compare").classList.contains("active") && state.current != null) renderCompare();
+    refreshCount();
+    if($("screen-compare").classList.contains("active") && currentPair()) renderCompare();
     if($("screen-results").classList.contains("active") && state.results.length) renderResults();
   }
   function applyLocale(id){
@@ -1155,6 +1162,7 @@
     items: [], question: "", mode: "binary", listId: null,
     sorted: [], remaining: [], current: null,
     lo: 0, hi: 0, pos: 0,                 // lo/hi = binary bounds; pos = sequential cursor
+    si: 0, sj: 1,                         // simple (all-pairs) cursors: items[si] vs items[sj]
     comparisons: [], history: [], estTotal: 1,
     results: [], showChecked: false, locked: false,
   };
@@ -1177,13 +1185,20 @@
       .split("{n}").join('<span class="n">' + items.length + '</span>');
     if(dupes) s += ' <span class="rm">' + esc(t(pluralKey("input.countDupes", dupes), {n:dupes})) + '</span>';
     $("count").innerHTML = s;
+    renderModeHelp();   // Simple Sort's help text shows a live comparison count
   }
   function renderModeHelp(){
+    if(state.mode === "simple"){
+      const n = parseItems($("items").value).items.length;
+      $("mode-help").textContent = t("input.helpSimple", {count: n > 1 ? n*(n-1)/2 : 0, n});
+      return;
+    }
     $("mode-help").textContent = state.mode === "sequential" ? t("input.helpSequential") : t("input.helpBinary");
   }
 
-  // expected comparison count, per mode (used only for the progress estimate)
+  // expected comparison count, per mode (exact for simple; an estimate otherwise)
   function estComparisons(n, mode){
+    if(mode === "simple") return Math.max(1, n*(n-1)/2);
     let c = 0;
     for(let k=1;k<n;k++) c += (mode==="sequential") ? (k/2 + k/(k+1)) : Math.ceil(Math.log2(k+1));
     return Math.max(1, Math.round(c));
@@ -1196,11 +1211,16 @@
     const q = $("question").value.replace(/\s+/g," ").trim();
     state.question = q || t("app.defaultQuestion");
     state.items = items.slice();
-    state.sorted = [items[0]];
-    state.remaining = items.slice(1);
     state.comparisons = []; state.history = [];
     state.estTotal = estComparisons(items.length, state.mode);
-    nextItem();
+    if(state.mode === "simple"){
+      state.si = 0; state.sj = 1;
+      state.sorted = []; state.remaining = []; state.current = null;
+    } else {
+      state.sorted = [items[0]];
+      state.remaining = items.slice(1);
+      nextItem();
+    }
     show("compare");
     renderCompare();
   }
@@ -1211,6 +1231,10 @@
     return false;
   }
   function currentPair(){
+    if(state.mode === "simple"){
+      if(state.si >= state.items.length - 1) return null;
+      return { a: state.items[state.si], b: state.items[state.sj], idx: state.sj, aIdx: state.si };
+    }
     if(state.current == null) return null;
     const idx = state.mode === "sequential" ? state.pos : (state.lo + state.hi) >> 1;
     return { a: state.current, b: state.sorted[idx], idx };
@@ -1218,13 +1242,19 @@
   function snapshot(){
     state.history.push(JSON.stringify({
       sorted:state.sorted, remaining:state.remaining, current:state.current,
-      lo:state.lo, hi:state.hi, pos:state.pos, comparisons:state.comparisons
+      lo:state.lo, hi:state.hi, pos:state.pos, si:state.si, sj:state.sj, comparisons:state.comparisons
     }));
   }
-  function applyAnswer(res){                 // res: 'a'(placing higher) | 'b'(ranked higher) | 'draw'
+  function applyAnswer(res){                 // res: 'a'(anchor higher) | 'b'(other higher) | 'draw'
     const p = currentPair(); if(!p) return;
     snapshot();
-    state.comparisons.push({ a: state.current, b: state.sorted[p.idx], result: res });
+    state.comparisons.push({ a: p.a, b: p.b, result: res });
+    if(state.mode === "simple"){
+      state.sj++;
+      if(state.sj >= state.items.length){ state.si++; state.sj = state.si + 1; }
+      if(state.si >= state.items.length - 1) return finishSort();
+      return false;
+    }
     if(state.mode === "sequential"){
       if(res === "draw"){ state.sorted.splice(p.idx + 1, 0, state.current); return nextItem(); }
       if(res === "a"){ state.sorted.splice(p.idx, 0, state.current); return nextItem(); } // above this rank
@@ -1288,8 +1318,36 @@
     return find;
   }
 
+  // Simple Sort ranking: 1 point per win; point-ties broken by the results among just the
+  // tied items (for two items that is their head-to-head duel); a pure cycle keeps the
+  // original list order. Recursion always terminates: a group that doesn't split returns.
+  function roundRobinOrder(){
+    function orderGroup(group){
+      if(group.length <= 1) return group;
+      const inG = new Set(group);
+      const pts = new Map(group.map(it => [it, 0]));
+      state.comparisons.forEach(c => {
+        if(!inG.has(c.a) || !inG.has(c.b)) return;
+        if(c.result === "a") pts.set(c.a, pts.get(c.a) + 1);
+        else if(c.result === "b") pts.set(c.b, pts.get(c.b) + 1);
+        else { pts.set(c.a, pts.get(c.a) + 0.5); pts.set(c.b, pts.get(c.b) + 0.5); }
+      });
+      const buckets = new Map();
+      group.forEach(it => {
+        const k = pts.get(it);
+        if(!buckets.has(k)) buckets.set(k, []);
+        buckets.get(k).push(it);
+      });
+      if(buckets.size === 1) return group;      // everyone level — keep original list order
+      const out = [];
+      [...buckets.keys()].sort((x, y) => y - x).forEach(k => out.push(...orderGroup(buckets.get(k))));
+      return out;
+    }
+    return orderGroup(state.items.slice());
+  }
+
   function finishSort(){
-    const order = state.sorted.slice();
+    const order = state.mode === "simple" ? roundRobinOrder() : state.sorted.slice();
     const rating0 = bradleyTerry(state.items, state.comparisons);
     const find = tieGroups(state.items, state.comparisons);
     const blocks = [];
@@ -1320,19 +1378,38 @@
   // ---------- Compare rendering ----------
   function renderCompare(){
     const p = currentPair(); if(!p) return;
+    const simple = state.mode === "simple";
+    $("screen-compare").classList.toggle("simple", simple);
+    $("kbd-hint-box").dataset.i18nHtml = simple ? "compare.kbdHintSimple" : "compare.kbdHint";
+    $("kbd-hint-box").innerHTML = t($("kbd-hint-box").dataset.i18nHtml);
+    [["opt-anchor", simple ? "compare.ariaAnchorSimple" : "compare.ariaAnchor"],
+     ["opt-ranked", simple ? "compare.ariaRankedSimple" : "compare.ariaRanked"]].forEach(([id, key])=>{
+      $(id).dataset.i18nAriaLabel = key;
+      $(id).setAttribute("aria-label", t(key));
+    });
     $("ask").textContent = state.question;
-    $("txt-anchor").textContent = p.a;        // anchor = the item being placed
-    $("txt-ranked").textContent = p.b;        // ranked item it's compared against
+    $("txt-anchor").textContent = p.a;        // anchor: item being placed / fixed left item
+    $("txt-ranked").textContent = p.b;
     $("side-ranked").textContent = t("compare.rankBadge", {n: p.idx + 1});
+    if(simple) $("side-anchor").textContent = t("compare.rankBadge", {n: p.aIdx + 1});
 
-    const placing = Math.min(state.sorted.length + 1, state.items.length);
-    $("place-step").innerHTML = esc(t("compare.placingStep"))
-      .split("{n}").join("<b>" + placing + "</b>")
-      .split("{total}").join(String(state.items.length));
     const done = state.comparisons.length;
-    $("count-step").innerHTML = esc(t("compare.comparisonsStep"))
-      .split("{n}").join(String(done + 1))
-      .split("{total}").join(String(state.estTotal));
+    if(simple){
+      $("place-step").innerHTML = esc(t("compare.comparingStep"))
+        .split("{n}").join("<b>" + (p.aIdx + 1) + "</b>")
+        .split("{total}").join(String(state.items.length - 1));
+      $("count-step").innerHTML = esc(t("compare.comparisonsExact"))
+        .split("{n}").join(String(done + 1))
+        .split("{total}").join(String(state.estTotal));
+    } else {
+      const placing = Math.min(state.sorted.length + 1, state.items.length);
+      $("place-step").innerHTML = esc(t("compare.placingStep"))
+        .split("{n}").join("<b>" + placing + "</b>")
+        .split("{total}").join(String(state.items.length));
+      $("count-step").innerHTML = esc(t("compare.comparisonsStep"))
+        .split("{n}").join(String(done + 1))
+        .split("{total}").join(String(state.estTotal));
+    }
     $("bar-fill").style.width = Math.min(100, Math.round(100 * done / state.estTotal)) + "%";
 
     $("opt-anchor").classList.remove("chosen"); $("opt-ranked").classList.remove("chosen");
@@ -1341,9 +1418,10 @@
     $("back").disabled = state.history.length === 0;
     state.locked = false;
   }
-  function choose(side){                       // side: 'anchor'|'ranked'|'equal'  (anchor = the item being placed)
+  function choose(side){                       // side: 'anchor'|'ranked'|'equal'
     if(state.locked) return;
-    if(state.current == null) return;
+    if(!currentPair()) return;
+    if(side === "equal" && state.mode === "simple") return;   // no draws in Simple Sort
     // Tilt classes are physical; under RTL the grid mirrors, so the anchor sits on the right.
     const rtl = document.documentElement.dir === "rtl";
     let res, tip;
@@ -1352,7 +1430,7 @@
     else { res = "b"; tip = rtl ? "tip-left" : "tip-right"; $("opt-ranked").classList.add("chosen"); }
     $("duel").classList.add(tip);
     state.locked = true;
-    const commit = () => { applyAnswer(res); if(state.current != null) renderCompare(); };
+    const commit = () => { applyAnswer(res); if(currentPair()) renderCompare(); };
     if(reduceMotion) commit(); else setTimeout(commit, 150);
   }
 
@@ -1469,7 +1547,7 @@
     if(work){
       if(typeof work.items === "string" && work.items) $("items").value = work.items;
       if(typeof work.question === "string" && work.question) $("question").value = work.question;
-      if(work.mode === "sequential" || work.mode === "binary"){
+      if(["binary","sequential","simple"].includes(work.mode)){
         state.mode = work.mode;
         document.querySelectorAll("#seg .seg-btn").forEach(b=> b.classList.toggle("active", b.dataset.mode === state.mode));
       }
