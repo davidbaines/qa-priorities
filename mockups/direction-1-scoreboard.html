@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Versus — Direction 1: The Scoreboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ DIRECTION 1 — THE SCOREBOARD ============
+     A fixture under floodlights. Petrol-dark field, cream team cards,
+     one amber signal. Condensed display type; running tally as the
+     signature element. */
+  :root{
+    --field:#14323C; --field-deep:#0D242C; --card:#F5F0E4; --card-dim:#E9E2D2;
+    --ink:#1B2B30; --ink-soft:#54666D; --cream-text:#EDE6D4; --cream-dim:#9FB4BB;
+    --tape:#22454F; --amber:#E3A335; --amber-deep:#B87F1E;
+    --disp:"Barlow Condensed","Arial Narrow",sans-serif;
+    --body:"Barlow",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--field);color:var(--cream-text);font-family:var(--body);line-height:1.5;min-height:100dvh}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .demo-nav{position:sticky;top:0;z-index:99;display:flex;gap:2px;background:var(--field-deep);padding:8px 14px;border-bottom:1px solid var(--tape)}
+  .demo-nav button{font-family:var(--mono);font-size:12px;color:var(--cream-dim);background:none;border:none;padding:7px 12px;cursor:pointer;border-radius:4px}
+  .demo-nav button.on{color:var(--amber);background:rgba(227,163,53,.1)}
+  .demo-nav .tag{margin-inline-start:auto;font-family:var(--mono);font-size:11px;color:var(--cream-dim);align-self:center}
+  .stage{display:none}
+  .stage.on{display:block}
+
+  /* ---------- shared chrome ---------- */
+  .bar{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--tape)}
+  .brand{font-family:var(--disp);font-weight:800;font-size:22px;letter-spacing:.14em;text-transform:uppercase;color:var(--cream-text)}
+  .brand em{color:var(--amber);font-style:normal}
+  .bar .lists-link{font-family:var(--mono);font-size:12px;color:var(--cream-dim);text-decoration:none;border:1px solid var(--tape);border-radius:4px;padding:6px 10px}
+  .bar .lists-link:hover{color:var(--amber);border-color:var(--amber-deep)}
+  .bar .right{margin-inline-start:auto;display:flex;gap:10px}
+  .wrap{max-width:900px;margin:0 auto;padding:34px 22px 90px}
+
+  /* ---------- setup screen ---------- */
+  .kick{font-family:var(--disp);font-weight:700;font-size:clamp(34px,6vw,56px);line-height:.95;letter-spacing:-.01em;text-transform:uppercase;margin:8px 0 6px;text-wrap:balance}
+  .kick .vs{color:var(--amber)}
+  .sub{color:var(--cream-dim);max-width:52ch;margin:0 0 30px}
+  .sheet{background:var(--card);color:var(--ink);border-radius:6px;padding:0;overflow:hidden;box-shadow:0 20px 50px -24px rgba(4,16,20,.8)}
+  .sheet-head{display:flex;justify-content:space-between;align-items:baseline;padding:14px 18px 10px;border-bottom:2px solid var(--ink)}
+  .sheet-head b{font-family:var(--disp);font-weight:700;font-size:18px;letter-spacing:.08em;text-transform:uppercase}
+  .sheet-head span{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+  .sheet textarea{width:100%;border:0;outline:0;background:transparent;font:500 16px/2.1 var(--body);color:var(--ink);padding:12px 18px;min-height:230px;resize:vertical;
+    background-image:repeating-linear-gradient(transparent,transparent 32.6px,#D8CFBA 33px);background-attachment:local}
+  .qrow{display:flex;gap:10px;margin:26px 0 8px;align-items:center;flex-wrap:wrap}
+  .qrow label{font-family:var(--disp);font-weight:600;font-size:16px;letter-spacing:.1em;text-transform:uppercase;color:var(--cream-dim)}
+  .qinput{flex:1;min-width:240px;background:transparent;border:0;border-bottom:2px solid var(--tape);color:var(--cream-text);font:600 20px/1.4 var(--body);padding:8px 2px;outline:0}
+  .qinput:focus{border-color:var(--amber)}
+  .formats{display:flex;gap:8px;margin:22px 0 30px;flex-wrap:wrap}
+  .format{font-family:var(--mono);font-size:12.5px;color:var(--cream-dim);border:1px solid var(--tape);background:none;border-radius:4px;padding:9px 14px;cursor:pointer}
+  .format.on{color:var(--field-deep);background:var(--amber);border-color:var(--amber);font-weight:600}
+  .go{display:inline-flex;align-items:center;gap:12px;font-family:var(--disp);font-weight:700;font-size:22px;letter-spacing:.1em;text-transform:uppercase;color:var(--field-deep);background:var(--amber);border:none;border-radius:5px;padding:14px 30px;cursor:pointer;transition:transform .15s,box-shadow .2s;box-shadow:0 10px 30px -12px rgba(227,163,53,.55)}
+  .go:hover{transform:translateY(-2px)}
+  .go:active{transform:translateY(0) scale(.985)}
+
+  /* ---------- compare screen ---------- */
+  .round-strip{display:flex;justify-content:center;gap:26px;font-family:var(--mono);font-size:12px;color:var(--cream-dim);padding:16px 0 4px;letter-spacing:.08em}
+  .round-strip b{color:var(--amber);font-weight:600}
+  .ask1{font-family:var(--disp);font-weight:700;font-size:clamp(30px,5vw,48px);letter-spacing:.01em;text-transform:uppercase;text-align:center;margin:12px 0 34px;text-wrap:balance}
+  .duel1{display:grid;grid-template-columns:1fr 92px 1fr;align-items:stretch;max-width:980px;margin:0 auto;padding:0 22px}
+  .fighter{background:var(--card);color:var(--ink);border-radius:6px;min-height:240px;display:flex;flex-direction:column;justify-content:center;padding:34px 28px;text-align:center;cursor:pointer;border:none;position:relative;transition:transform .16s,box-shadow .2s;box-shadow:0 18px 44px -22px rgba(4,16,20,.85)}
+  .fighter:hover{transform:translateY(-4px)}
+  .fighter:active{transform:scale(.985)}
+  .fighter .corner{position:absolute;top:12px;inset-inline-start:14px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-soft);letter-spacing:.1em}
+  .fighter .name{font-family:var(--disp);font-weight:700;font-size:clamp(24px,3.4vw,34px);line-height:1.05;text-wrap:balance}
+  .fighter.pick{outline:3px solid var(--amber);outline-offset:2px}
+  .tale{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+  .tale .rule{width:2px;flex:1;background:linear-gradient(var(--tape),var(--amber),var(--tape))}
+  .tale .tally{font-family:var(--disp);font-weight:800;font-size:30px;color:var(--amber);letter-spacing:.05em}
+  .tale .vs-chip{font-family:var(--disp);font-weight:800;font-size:15px;letter-spacing:.2em;color:var(--cream-dim)}
+  .under{display:flex;justify-content:center;align-items:center;gap:26px;margin:30px 0 10px}
+  .draw-btn{font-family:var(--mono);font-size:13px;color:var(--cream-dim);background:none;border:1px dashed var(--tape);border-radius:4px;padding:10px 18px;cursor:pointer}
+  .draw-btn:hover{color:var(--amber);border-color:var(--amber-deep)}
+  .back-link{font-family:var(--mono);font-size:13px;color:var(--cream-dim);background:none;border:none;cursor:pointer}
+  .kbd-row{text-align:center;font-family:var(--mono);font-size:11px;color:#5E7680;margin-top:26px}
+  .kbd-row kbd{border:1px solid var(--tape);border-radius:3px;padding:1px 6px;margin:0 2px}
+
+  /* ---------- results screen ---------- */
+  .table-head{display:flex;align-items:baseline;justify-content:space-between;max-width:900px;margin:26px auto 18px;padding:0 22px}
+  .table-head h2{font-family:var(--disp);font-weight:800;font-size:34px;letter-spacing:.06em;text-transform:uppercase;margin:0}
+  .table-head .ft{font-family:var(--mono);font-size:12px;color:var(--cream-dim)}
+  .league{max-width:900px;margin:0 auto;padding:0 22px;list-style:none}
+  .row1{display:grid;grid-template-columns:56px 34px 1fr auto;gap:14px;align-items:center;background:var(--card);color:var(--ink);margin-bottom:6px;border-radius:5px;padding:14px 18px 14px 0;overflow:hidden}
+  .row1 .pos{font-family:var(--disp);font-weight:800;font-size:26px;text-align:center;background:var(--field-deep);color:var(--cream-text);align-self:stretch;display:flex;align-items:center;justify-content:center}
+  .row1.top .pos{background:var(--amber);color:var(--field-deep)}
+  .row1 .tick{width:22px;height:22px;border:2px solid var(--ink-soft);border-radius:3px;cursor:pointer}
+  .row1 .who{font-weight:600;font-size:17px}
+  .row1 .who small{display:block;font-family:var(--mono);font-weight:400;font-size:11px;color:var(--ink-soft);margin-top:2px}
+  .row1 .pts{font-family:var(--mono);font-weight:600;font-size:18px;color:var(--ink)}
+  .row1 .pts small{font-size:10px;color:var(--ink-soft);display:block;text-align:end}
+  .row1.ft{opacity:.6}
+  .row1.ft .who{text-decoration:line-through}
+  .note1{max-width:900px;margin:20px auto;padding:0 22px;font-size:13px;color:var(--cream-dim);max-width:66ch}
+
+  /* ---------- phone frame ---------- */
+  .phones{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;padding:40px 20px}
+  .phone{width:390px;max-width:94vw;height:760px;border:10px solid #0A1B21;border-radius:38px;overflow:hidden;background:var(--field);display:flex;flex-direction:column;box-shadow:0 40px 80px -40px rgba(0,0,0,.9)}
+  .phone .p-ask{font-family:var(--disp);font-weight:700;font-size:26px;text-transform:uppercase;text-align:center;padding:52px 18px 6px;text-wrap:balance}
+  .phone .p-strip{text-align:center;font-family:var(--mono);font-size:11px;color:var(--cream-dim);padding-bottom:14px}
+  .phone .p-strip b{color:var(--amber)}
+  .p-duel{flex:1;display:flex;flex-direction:column;gap:0;padding:0 14px 14px}
+  .p-card{flex:1;background:var(--card);color:var(--ink);border-radius:6px;border:none;display:flex;align-items:center;justify-content:center;padding:20px;cursor:pointer}
+  .p-card .name{font-family:var(--disp);font-weight:700;font-size:26px;text-align:center;line-height:1.05}
+  .p-tape{display:flex;align-items:center;gap:12px;padding:10px 6px}
+  .p-tape .l{flex:1;height:2px;background:var(--tape)}
+  .p-tape .t{font-family:var(--disp);font-weight:800;font-size:22px;color:var(--amber)}
+  .p-foot{display:flex;justify-content:center;gap:14px;padding:12px 0 26px}
+  @media (max-width:700px){
+    .duel1{grid-template-columns:1fr}
+    .tale{flex-direction:row;height:70px}
+    .tale .rule{height:2px;width:auto;flex:1;background:linear-gradient(90deg,var(--tape),var(--amber),var(--tape))}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+</style>
+</head>
+<body>
+<nav class="demo-nav">
+  <button class="on" data-s="setup">Setup</button>
+  <button data-s="compare">Compare</button>
+  <button data-s="results">Results</button>
+  <button data-s="phone">Phone</button>
+  <span class="tag">DIRECTION 1 · THE SCOREBOARD</span>
+</nav>
+
+<!-- ================= SETUP ================= -->
+<section class="stage on" id="setup">
+  <div class="bar">
+    <span class="brand">Ver<em>s</em>us</span>
+    <span class="right">
+      <a class="lists-link" href="#">MY LISTS (3)</a>
+      <a class="lists-link" href="#">SETTINGS</a>
+    </span>
+  </div>
+  <div class="wrap">
+    <h1 class="kick">Tonight's <span class="vs">card</span></h1>
+    <p class="sub">Write the contenders, one per line. They'll meet two at a time until the table settles.</p>
+    <div class="sheet">
+      <div class="sheet-head"><b>Contenders</b><span>6 ENTERED · 1 DUPLICATE REMOVED</span></div>
+      <textarea spellcheck="false">Fix the gate latch
+Book flights to Madang
+Reply to the survey team
+Draft the language report
+Back up the field laptops
+Plan Saturday's market run</textarea>
+    </div>
+    <div class="qrow">
+      <label>The question</label>
+      <input class="qinput" value="Which should you do first?">
+    </div>
+    <div class="formats">
+      <button class="format on">FEWEST QUESTIONS · ~11</button>
+      <button class="format">TOP-DOWN · ~17</button>
+      <button class="format">EVERY PAIR · 15</button>
+    </div>
+    <button class="go">Start the card →</button>
+  </div>
+</section>
+
+<!-- ================= COMPARE ================= -->
+<section class="stage" id="compare">
+  <div class="bar">
+    <span class="brand">Ver<em>s</em>us</span>
+    <span class="right"><a class="lists-link" href="#">MY LISTS</a></span>
+  </div>
+  <div class="round-strip"><span>ROUND <b>4</b> / 11</span><span>PLACING <b>3</b> OF 6</span></div>
+  <h2 class="ask1">Which should you do first?</h2>
+  <div class="duel1">
+    <button class="fighter"><span class="corner">IN THE RING</span><span class="name">Reply to the survey team</span></button>
+    <div class="tale"><span class="rule"></span><span class="tally">2–1</span><span class="vs-chip">VS</span><span class="rule"></span></div>
+    <button class="fighter"><span class="corner">RANKED #2</span><span class="name">Book flights to Madang</span></button>
+  </div>
+  <div class="under">
+    <button class="back-link">← Back</button>
+    <button class="draw-btn">TOO CLOSE — DRAW</button>
+  </div>
+  <p class="kbd-row"><kbd>←</kbd> left wins <kbd>→</kbd> right wins <kbd>↓</kbd> draw <kbd>⌫</kbd> back</p>
+</section>
+
+<!-- ================= RESULTS ================= -->
+<section class="stage" id="results">
+  <div class="bar">
+    <span class="brand">Ver<em>s</em>us</span>
+    <span class="right"><a class="lists-link" href="#">CSV</a><a class="lists-link" href="#">NEW CARD</a></span>
+  </div>
+  <div class="table-head">
+    <h2>Final table</h2>
+    <span class="ft">"WHICH SHOULD YOU DO FIRST?" · 11 ROUNDS · 1 DONE</span>
+  </div>
+  <ol class="league">
+    <li class="row1 top"><span class="pos">1</span><span class="tick"></span><span class="who">Reply to the survey team<small>WON 4 OF 5</small></span><span class="pts">147<small>PTS</small></span></li>
+    <li class="row1"><span class="pos">2</span><span class="tick"></span><span class="who">Book flights to Madang<small>WON 4 OF 5</small></span><span class="pts">121<small>PTS</small></span></li>
+    <li class="row1"><span class="pos">3</span><span class="tick"></span><span class="who">Fix the gate latch<small>WON 3 OF 5</small></span><span class="pts">98<small>PTS</small></span></li>
+    <li class="row1 ft"><span class="pos">4</span><span class="tick" style="background:#54666D"></span><span class="who">Back up the field laptops<small>FULL TIME — DONE</small></span><span class="pts">84<small>PTS</small></span></li>
+    <li class="row1"><span class="pos">5</span><span class="tick"></span><span class="who">Draft the language report<small>WON 1 OF 5</small></span><span class="pts">61<small>PTS</small></span></li>
+    <li class="row1"><span class="pos">6</span><span class="tick"></span><span class="who">Plan Saturday's market run<small>WON 1 OF 5</small></span><span class="pts">47<small>PTS</small></span></li>
+  </ol>
+  <p class="note1">Done items stay in the table at full opacity 60% — the numbering never has holes. Points are the usual strength score, renamed to match the register.</p>
+</section>
+
+<!-- ================= PHONE ================= -->
+<section class="stage" id="phone">
+  <div class="phones">
+    <div class="phone">
+      <div class="p-ask">Which should you do first?</div>
+      <div class="p-strip">ROUND <b>4</b>/11</div>
+      <div class="p-duel">
+        <button class="p-card"><span class="name">Reply to the survey team</span></button>
+        <div class="p-tape"><span class="l"></span><span class="t">2–1</span><span class="l"></span></div>
+        <button class="p-card"><span class="name">Book flights to Madang</span></button>
+      </div>
+      <div class="p-foot"><button class="draw-btn">DRAW</button><button class="back-link">← BACK</button></div>
+    </div>
+  </div>
+</section>
+
+<script>
+document.querySelectorAll(".demo-nav button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".demo-nav button").forEach(x=>x.classList.remove("on"));
+    document.querySelectorAll(".stage").forEach(s=>s.classList.remove("on"));
+    b.classList.add("on");
+    document.getElementById(b.dataset.s).classList.add("on");
+  });
+});
+document.querySelectorAll(".fighter, .p-card").forEach(f=>{
+  f.addEventListener("click",()=>{
+    f.parentElement.querySelectorAll(".pick").forEach(x=>x.classList.remove("pick"));
+    f.classList.add("pick");
+  });
+});
+</script>
+</body>
+</html>
