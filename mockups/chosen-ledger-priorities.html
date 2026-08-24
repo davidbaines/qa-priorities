@@ -50,12 +50,13 @@
     font:400 19px/2 var(--serif);padding:10px 0;min-height:220px;resize:vertical;
     background-image:repeating-linear-gradient(transparent,transparent 37.5px,var(--rule) 38px);background-attachment:local}
   .methods2{border-top:1px solid var(--ink);margin-top:36px;padding-top:14px}
+  .m-grid{display:grid;grid-template-columns:auto repeat(3,minmax(110px,auto));gap:12px 30px;align-items:baseline;justify-content:start}
   .m-label{font-size:14px;letter-spacing:.08em;color:var(--ink-mid);font-variant:small-caps}
-  .m-opts{display:flex;gap:34px;margin-top:12px;flex-wrap:wrap}
-  .m-opt{background:none;border:none;cursor:pointer;text-align:start;padding:0;font-family:var(--serif);color:var(--ink-mid)}
-  .m-opt b{display:block;font-size:19px;font-weight:700;color:var(--ink-mid);padding-bottom:3px;border-bottom:2px solid transparent}
-  .m-opt small{display:block;font-size:13px;color:var(--ink-faint);margin-top:5px}
+  .m-opt{background:none;border:none;cursor:pointer;text-align:center;padding:0;font-family:var(--serif);color:var(--ink-mid)}
+  .m-opt b{display:inline-block;font-size:19px;font-weight:700;color:var(--ink-mid);padding-bottom:3px;border-bottom:2px solid transparent}
   .m-opt.on b{color:var(--ink);border-color:var(--stamp)}
+  .m-num{text-align:center;font-size:14px;color:var(--ink-faint);font-variant-numeric:tabular-nums}
+  .m-num.on{color:var(--ink)}
   .begin{font:700 18px var(--serif);color:var(--paper);background:var(--ink);border:none;padding:13px 36px;cursor:pointer;letter-spacing:.02em;margin-top:38px;transition:background .2s,transform .12s}
   .begin:hover{background:#2C3B49}
   .begin:active{transform:scale(.985)}
@@ -130,7 +131,6 @@
   </header>
   <div class="sheet2">
     <input class="q-heading" value="Which has higher priority?" spellcheck="false">
-    <p class="q-note">Click the question to change it — it is asked of every pair.</p>
     <div class="entry-label">Your List — One Per Line</div>
     <textarea class="entries" spellcheck="false">Fix the gate latch
 Book flights to Madang
@@ -139,11 +139,15 @@ Draft the language report
 Back up the field laptops
 Plan Saturday's market run</textarea>
     <div class="methods2">
-      <span class="m-label">Sorting method:</span>
-      <div class="m-opts">
-        <button class="m-opt on"><b>Quickest</b><small>No. of comparisons: ~11</small></button>
-        <button class="m-opt"><b>Insertion</b><small>No. of comparisons: ~17</small></button>
-        <button class="m-opt"><b>Compare all</b><small>No. of comparisons: 15</small></button>
+      <div class="m-grid">
+        <span class="m-label">Sorting method:</span>
+        <button class="m-opt on"><b>Quickest</b></button>
+        <button class="m-opt"><b>Insertion</b></button>
+        <button class="m-opt"><b>Compare all</b></button>
+        <span class="m-label">No. of comparisons:</span>
+        <span class="m-num on">~11</span>
+        <span class="m-num">~17</span>
+        <span class="m-num">15</span>
       </div>
     </div>
     <button class="begin">Begin</button>
