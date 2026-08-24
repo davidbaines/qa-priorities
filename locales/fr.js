@@ -6,7 +6,6 @@ VERSUS.registerLocale("fr", {
   "strings": {
     "app.title": "Priorités",
     "app.defaultQuestion": "Lequel est le plus prioritaire ?",
-
     "input.listLabel": "Votre liste — un élément par ligne",
     "input.placeholder": "Corriger le bug d'accueil\nRépondre à l'e-mail de l'investisseur\nRéparer le test instable\nÉcrire l'annonce de lancement\nRefactoriser le module d'authentification",
     "input.sortingMethod": "Méthode de tri :",
@@ -23,7 +22,6 @@ VERSUS.registerLocale("fr", {
     "input.countItems.other": "{n} éléments",
     "input.countDupes.one": "· {n} doublon supprimé",
     "input.countDupes.other": "· {n} doublons supprimés",
-
     "compare.ariaAnchor": "L'élément que vous placez",
     "compare.ariaRanked": "Comparer à cet élément classé",
     "compare.ariaAnchorSimple": "L'élément qui reste fixe pour cette série",
@@ -35,7 +33,6 @@ VERSUS.registerLocale("fr", {
     "compare.or": "ou",
     "compare.back": "Retour",
     "compare.equal": "Priorité égale",
-
     "results.title": "L'ordre",
     "results.showChecked": "Afficher les terminés",
     "results.hideChecked": "Masquer les terminés",
@@ -53,19 +50,17 @@ VERSUS.registerLocale("fr", {
     "results.csvYes": "oui",
     "results.csvNo": "non",
     "results.csvFilename": "priorites.csv",
-
     "lists.label": "Mes listes",
     "lists.namePlaceholder": "Nom de la liste",
-    "lists.save": "Enregistrer la liste",
+    "lists.save": "Télécharger la liste",
     "lists.new": "Nouvelle liste",
-    "lists.import": "Importer une liste",
+    "lists.import": "Téléverser une liste",
     "lists.export": "Exporter",
     "lists.delete": "Supprimer",
     "lists.confirm": "Sûr ?",
     "lists.ranked": "classée",
     "lists.saved": "Enregistrée : {name}",
     "lists.nameNeeded": "Donnez d'abord un nom à la liste.",
-
     "panel.title": "Réglages",
     "panel.close": "Fermer",
     "panel.language": "Langue",
@@ -94,7 +89,6 @@ VERSUS.registerLocale("fr", {
     "panel.imported": "Importé : {name}",
     "panel.importErr": "Fichier Priorités non valide.",
     "panel.importIgnored": "· {n} clés inconnues ignorées",
-
     "color.paper": "Fond de page",
     "color.paperGlow": "Halo d'arrière-plan",
     "color.panel": "Surface",
@@ -114,12 +108,10 @@ VERSUS.registerLocale("fr", {
     "color.questionTeal": "Couleur de la question",
     "color.doneWash": "Ligne terminée",
     "color.err": "Texte d'erreur",
-
     "font.sans": "Police du corps",
     "font.display": "Police d'affichage",
     "font.serif": "Police du titre",
     "font.mono": "Police des chiffres",
-
     "size.title": "Marque",
     "size.question": "Question",
     "size.lede": "Notes",
