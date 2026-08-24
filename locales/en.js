@@ -70,7 +70,7 @@ VERSUS.registerLocale("en", {
     "panel.colors": "Colours",
     "panel.fonts": "Fonts",
     "panel.sizes": "Text Sizes",
-    "panel.reset": "Reset to Style",
+    "panel.reset": "Reset style",
     "panel.myStyles": "Style",
     "panel.styleName": "Style Name",
     "panel.save": "Save Style",

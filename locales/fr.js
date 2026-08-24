@@ -75,7 +75,7 @@ VERSUS.registerLocale("fr", {
     "panel.colors": "Couleurs",
     "panel.fonts": "Polices",
     "panel.sizes": "Tailles de texte",
-    "panel.reset": "Réinitialiser au style",
+    "panel.reset": "Abandonner les modifications",
     "panel.myStyles": "Mes styles",
     "panel.styleName": "Nom du style",
     "panel.save": "Enregistrer le style",

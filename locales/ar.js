@@ -75,7 +75,7 @@ VERSUS.registerLocale("ar", {
     "panel.colors": "الألوان",
     "panel.fonts": "الخطوط",
     "panel.sizes": "أحجام النص",
-    "panel.reset": "إعادة الضبط إلى النمط",
+    "panel.reset": "تجاهل التعديلات",
     "panel.myStyles": "أنماطي",
     "panel.styleName": "اسم النمط",
     "panel.save": "حفظ النمط",
