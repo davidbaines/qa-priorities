@@ -72,6 +72,7 @@ VERSUS.registerLocale("fr", {
     "lists.namePlaceholder": "Nom de la liste",
     "lists.save": "Enregistrer la liste",
     "lists.new": "Nouvelle liste",
+    "lists.import": "Importer une liste",
     "lists.export": "Exporter",
     "lists.delete": "Supprimer",
     "lists.confirm": "Sûr ?",
