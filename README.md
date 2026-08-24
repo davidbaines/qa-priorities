@@ -1,119 +1,111 @@
-# Versus
+# Priorities
 
-A small web app for ranking a list by comparing two items at a time. Put in your
-tasks, restaurants, features — anything — answer a series of "this or that"
-questions, and get a full ranking with a strength score for each item. No build
-step, no server, and nothing leaves your browser.
+A small web app for putting a list in order by comparing two items at a time. Write
+your tasks, restaurants, ideas — anything — answer a series of "which has higher
+priority?" questions, and get a full ranking with a strength score for each item.
+No build step, no server, and nothing leaves your browser.
 
 **Live:** [https://davidbaines.github.io/versus/](https://davidbaines.github.io/versus/)
+*(the app is called Priorities; the repository keeps its original name, versus)*
+
+## Install it as an app
+
+Priorities is a PWA — from the live site you can install it like a native app, and it
+keeps working offline after the first visit:
+
+- **Android (Chrome):** open the site → menu (⋮) → **Add to Home screen** → Install.
+- **iPhone/iPad (Safari):** open the site → Share → **Add to Home Screen**.
+- **Desktop (Chrome/Edge):** click the install icon that appears in the address bar.
 
 ## Why pairwise?
 
-People are unreliable at ranking a long list directly, but very good at judging
-two things side by side. Versus turns the hard task (rank 20 things) into a
-sequence of easy ones (which of these two?), and only asks the questions it
-needs — it skips comparisons it can infer from earlier answers, so 25 items
-takes roughly 85 clicks instead of the 300 an all-pairs comparison would need.
+People are unreliable at ranking a long list directly, but very good at judging two
+things side by side. Priorities turns the hard task (rank 20 things) into a sequence
+of easy ones (which of these two?).
+
+Three sorting methods, chosen on the first screen (live comparison counts shown for
+your actual list):
+
+| Method | How it works | Comparisons for n items |
+|---|---|---|
+| **Quickest** | Binary insertion — each new item halves its way into place | ≈ n·log₂n (about 90 for 25 items) |
+| **Insertion** | Each new item walks down the ranking from the top | ≈ n²/4 (about 170 for 25 items) |
+| **Compare all** | Every pair once, with the same item staying on one side | exactly n(n−1)/2 (300 for 25 items) |
+
+In Compare all there is no "equal" option; ranking is by wins, with ties between
+items broken by their head-to-head result.
 
 ## Features
 
-- Paste a list or load a `.txt` file (one item per line); duplicates are removed.
-- Set your own comparison question — e.g. "Which is most important?", "Which do you prefer?"
-- Two comparison styles: **Fewest questions** (binary search) or **Top-down** (walk each new item down your current ranking).
-- Mark a pair **equal** when you can't separate them; declared ties share a rank and score.
-- Results show a rank, a strength score, and a proportional bar for each item.
-- Doubles as a to-do list: tick items off, with a show/hide toggle for completed ones.
-- Export to CSV (rank, item, score, done — your question is stored in cell E1).
-- Keyboard: `←` / `→` to choose (always the card on that side of the screen), `↓` (or `=`) for equal, `⌫` to undo.
-- Undo any answer, all the way back to the start.
-
-## Customize (the ⚙ button)
-
-Everything the app shows is data, and all of it can be changed from the
-Customize panel — with live preview on the page you're looking at:
-
-- **Language** — switch between shipped languages. Right-to-left languages
-  (like Arabic) mirror the whole layout automatically.
-- **Edit text** — rewrite any string the app displays. Your edits are a
-  personal layer on top of the chosen language and survive reloads.
-- **Theme** — pick a style, then change any colour, font, or text size.
-- **My styles** — save your current look under a name, reapply or delete it later.
-- **Share & export**:
-  - *Download site (single .html)* — one self-contained file with every
-    language and style (including yours) baked in. Open it anywhere, share it,
-    even re-export from it.
-  - *Download site (.zip)* — the same site in folder form, mirroring this
-    repo's layout, with your custom styles and text edits written out as
-    proper data files.
-  - *Export / import .json* — share a single style or language as a small data
-    file that another Versus user can import with one click.
-
-Preferences, custom styles, and text edits are stored in your browser's
-localStorage. Nothing is uploaded.
+- Paste a list, or upload a text file (one item per line); duplicates are removed.
+- The question is the heading — click it to change it; it's asked of every pair.
+- Keyboard on the compare screen: `←`/`→` select a side, `Enter` or `Space` accepts,
+  `↓` for equal priority, `⌫` to undo. Clicking or tapping accepts directly.
+- **My Lists** — save any number of named lists, each with its question and (once
+  ranked) its results and done-ticks. A loaded list stays synced: ticking items done
+  or re-ranking writes back automatically. Lists export/import as `.json` files.
+- Results are a ledger: stamped rank numerals, a Bradley–Terry strength score, and a
+  done-box per item. Finished items stay visible (struck through) so ranks never skip.
+- Export the ranking as CSV.
+- **Settings (⚙)** — switch language (English, Français, العربية — right-to-left
+  languages mirror the whole layout), pick or edit a style (every colour, font, and
+  text size, with live preview), rewrite any text in the app, and share styles or
+  languages as small `.json` files.
+- **Download the whole site** — as a single self-contained `.html` file (all languages
+  and styles baked in, works anywhere, can even re-export itself) or as a `.zip`
+  mirroring this repository's layout.
 
 ## How the site is put together
 
-`index.html` is a pure engine: it contains no English text and no colours of
-its own. Every language is a file in `locales/`, every look is a file in
-`styles/`, and the page loads whatever the two `manifest.js` files list —
-English and the "Classic" look are ordinary entries with no special status:
+`index.html` is a pure engine: it contains no English text and no theme values.
+Languages live in `locales/`, looks live in `styles/`, and the page loads whatever the
+two `manifest.js` files list:
 
 ```
 index.html            the engine (markup skeleton + logic, no content)
+manifest.webmanifest  PWA manifest        sw.js   offline service worker
+icons/                app icons (and the HTML source that renders them)
 locales/
   manifest.js         lists locale files + default/fallback language
   en.js  fr.js  ar.js one file per language
 styles/
   manifest.js         lists style files + default/fallback style
+  ledger.js           the default "Priorities" look (SIL Gentium, ink & vermilion)
   classic.js  midnight.js
-examples/             sample .json share files (used as import fixtures)
+examples/             sample .json share files
+mockups/              the design exploration that produced the current look
 ```
 
-**Add a language:** copy `locales/en.js` to `locales/<code>.js`, translate the
-strings (missing keys fall back to the fallback language), set `dir: "rtl"` if
-appropriate, and add the code to `locales/manifest.js`. **Add a style:** same
-idea in `styles/` — a style may set any subset of tokens and inherits the rest
-from the fallback style. See [CONTRIBUTING.md](CONTRIBUTING.md).
+**Add a language:** copy `locales/en.js`, translate (missing keys fall back), set
+`dir: "rtl"` if appropriate, add the code to `locales/manifest.js`. **Add a style:**
+same idea in `styles/` — a style may set any subset of tokens. See
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## How the ranking works
 
-Ordering and scoring are kept deliberately separate.
+**Order** comes straight from your answers. The two insertion methods slot each new
+item into the ranking built so far, so the order always agrees with every answer.
+Compare all is a round robin: one point per win, point-ties broken by the results
+among the tied items, and a perfectly circular tie keeps your original list order.
 
-**Order** comes from an insertion sort with a three-way comparator (prefer A /
-equal / prefer B). Each new item is slotted into the ranking built so far — by
-binary search in the default mode, or by a top-down scan in sequential mode.
-Both produce a total order; the only ties are the ones you declare.
-
-**Score** is a maximum-a-posteriori Bradley–Terry fit over the same comparisons —
-the model behind Elo, but fit in batch rather than online, with light
-regularization (a virtual half-win and half-loss against a phantom opponent) so
-ratings stay finite even for an item that won or lost every comparison.
-
-Because the sort collects only about *n·log n* comparisons, the raw Bradley–Terry
-estimate is noisy and can disagree with the order you built. So the scores are
-projected onto "non-increasing along your ranking" using weighted isotonic
-regression (pool-adjacent-violators): where the estimate agrees with your order
-it passes through untouched; where it contradicts, those neighbours pool to a
-shared value — which honestly reads as "too close to separate." Finally, if the
-lowest score would be negative, every score is shifted up by the same amount so
-the bottom of the list reads 1.
-
-The result: the ranking is exactly the order you chose, and the numbers beside
-it never contradict that order.
+**Score** is a maximum-a-posteriori Bradley–Terry fit over the same comparisons — the
+model behind Elo, fit in batch with light regularization, then smoothed (weighted
+isotonic regression) so the numbers never contradict the order you chose, and shifted
+so the lowest reads at least 1. Read gaps as rough confidence, not exact distance.
 
 ## Privacy
 
-Everything runs in your browser. There's no backend and no analytics — your list
-and your choices never leave your machine. The only external request is to
-Google Fonts (each style declares which fonts it wants), with a system-font
-fallback if it's blocked.
+Everything runs in your browser. There's no backend and no analytics — your lists and
+choices are stored only in your browser's localStorage. The service worker caches the
+app's own files for offline use; the only external request is to Google Fonts, with a
+system-font fallback if it's blocked or you're offline.
 
 ## Run it locally
 
-Open `index.html` in any modern browser — keep it together with its `locales/`
-and `styles/` folders (no install, no build, no server). If you want a truly
-single file, use **Customize → Share & export → Download site (single .html)**
-on the live site: that file carries all its data inside itself.
+Open `index.html` in any modern browser — keep it together with its `locales/` and
+`styles/` folders (no install, no build, no server). Offline/install features need
+http(s), so they're active on the live site (or `python -m http.server` locally).
+For a truly single file, use **Settings → Share & Export → Download Site**.
 
 ## License
 

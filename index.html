@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Priorities</title>
+<meta name="description" content="Rank anything by comparing two items at a time.">
+<meta name="theme-color" content="#F3F5F7">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -1620,6 +1625,13 @@
     setSidebar(prefs.sidebar != null ? !!prefs.sidebar : matchMedia("(min-width:900px)").matches);
     document.documentElement.classList.remove("boot");
     if(!STORE.ok) showNotice(t("panel.storageWarn"));
+
+    // PWA: register the service worker only for the folder-based site over http(s) —
+    // never for file:// or standalone single-file exports (sw.js won't exist there).
+    if("serviceWorker" in navigator && !cfg.standalone &&
+       (location.protocol === "https:" || ["localhost","127.0.0.1"].includes(location.hostname))){
+      navigator.serviceWorker.register("sw.js").catch(()=>{});
+    }
   }
   VERSUS.ready(init);
 })();
