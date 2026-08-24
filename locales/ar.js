@@ -72,6 +72,7 @@ VERSUS.registerLocale("ar", {
     "lists.namePlaceholder": "اسم القائمة",
     "lists.save": "حفظ القائمة",
     "lists.new": "قائمة جديدة",
+    "lists.import": "استيراد قائمة",
     "lists.export": "تصدير",
     "lists.delete": "حذف",
     "lists.confirm": "متأكد؟",
