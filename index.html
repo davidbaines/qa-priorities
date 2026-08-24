@@ -223,6 +223,7 @@
   .ctl-row input.ctl-num{width:74px;font-family:var(--mono);font-size:var(--fs-label);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
   .ctl-reset{margin-top:14px;width:100%}
   .save-row{display:flex;gap:8px;align-items:center}
+  #sec-style .save-row{margin-top:10px}
   .save-row .q-input{flex:1;min-width:0}
   #custom-style-list{list-style:none;padding:0;margin:10px 0 0}
   .style-item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:var(--fs-label);color:var(--ink)}
@@ -380,25 +381,24 @@
       <select id="locale-select" class="q-input"></select>
     </div>
   </details>
-  <details id="sec-theme">
-    <summary data-i18n="panel.theme"></summary>
+  <details id="sec-style">
+    <summary data-i18n="panel.style"></summary>
     <div class="panel-section">
-      <div class="ctl-group" data-i18n="panel.style"></div>
       <select id="style-select" class="q-input"></select>
-      <div id="color-controls"></div>
-      <div id="font-controls"></div>
-      <div id="size-controls"></div>
-      <button class="btn ctl-reset" id="style-reset" data-i18n="panel.reset"></button>
-    </div>
-  </details>
-  <details id="sec-styles">
-    <summary data-i18n="panel.myStyles"></summary>
-    <div class="panel-section">
       <div class="save-row">
         <input id="style-name" class="q-input" type="text" data-i18n-placeholder="panel.styleName" autocomplete="off">
         <button class="btn" id="style-save" data-i18n="panel.save"></button>
       </div>
       <ul id="custom-style-list"></ul>
+    </div>
+  </details>
+  <details id="sec-edit-style">
+    <summary data-i18n="panel.theme"></summary>
+    <div class="panel-section">
+      <div id="color-controls"></div>
+      <div id="font-controls"></div>
+      <div id="size-controls"></div>
+      <button class="btn ctl-reset" id="style-reset" data-i18n="panel.reset"></button>
     </div>
   </details>
   <details id="sec-text">
@@ -515,6 +515,15 @@
   function t(key, params){
     let s = resolve(key);
     if(params) for(const k in params) s = s.split("{"+k+"}").join(params[k]);
+    // {language} and {style} are implicit variables, usable in any string.
+    if(s.indexOf("{language}") >= 0){
+      const loc = VERSUS.locales[i18n.locale];
+      s = s.split("{language}").join(loc ? (loc.name || i18n.locale) : "");
+    }
+    if(s.indexOf("{style}") >= 0){
+      const st = VERSUS.styles[theming.styleId];
+      s = s.split("{style}").join(st ? (st.name || theming.styleId) : "");
+    }
     return s;
   }
   function pluralKey(key, n){
@@ -601,8 +610,12 @@
     theming.gf = (def.googleFonts || (fb && fb.googleFonts) || []).slice();
     repaint();
     buildThemeControls();
+    refreshPanelLabels();   // "Edit {style}" tracks the active style's name
     savePrefs();
     return true;
+  }
+  function refreshPanelLabels(){
+    document.querySelectorAll("#customize [data-i18n]").forEach(el=> el.textContent = t(el.dataset.i18n));
   }
   function currentTokens(){ return Object.assign({}, theming.resolved, theming.edits); }
   function repaint(){

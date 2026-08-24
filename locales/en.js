@@ -6,7 +6,6 @@ VERSUS.registerLocale("en", {
   "strings": {
     "app.title": "Priorities",
     "app.defaultQuestion": "Which has higher priority?",
-
     "input.listLabel": "Your List — One Per Line",
     "input.placeholder": "Ship the onboarding fix\nReply to the investor email\nFix the flaky test\nWrite the launch post\nRefactor the auth module",
     "input.sortingMethod": "Sorting method:",
@@ -14,8 +13,8 @@ VERSUS.registerLocale("en", {
     "input.modeBinary": "Quickest",
     "input.modeSequential": "Insertion",
     "input.modeSimple": "Compare all",
-    "input.fileTitle": "Load a .txt file, one item per line",
-    "input.loadTxt": "Load a .txt File",
+    "input.fileTitle": "Upload a text file.",
+    "input.loadTxt": "Upload a text file.",
     "input.start": "Begin",
     "input.errTooFew": "Add at least two items to compare.",
     "input.errFile": "Couldn't read that file — try a plain .txt.",
@@ -23,7 +22,6 @@ VERSUS.registerLocale("en", {
     "input.countItems.other": "{n} items",
     "input.countDupes.one": "· {n} duplicate removed",
     "input.countDupes.other": "· {n} duplicates removed",
-
     "compare.ariaAnchor": "The item you are placing",
     "compare.ariaRanked": "Compare against this ranked item",
     "compare.ariaAnchorSimple": "The item staying fixed for this round",
@@ -35,7 +33,6 @@ VERSUS.registerLocale("en", {
     "compare.or": "or",
     "compare.back": "Back",
     "compare.equal": "Equal Priority",
-
     "results.title": "The Order",
     "results.showChecked": "Show Finished",
     "results.hideChecked": "Hide Finished",
@@ -53,7 +50,6 @@ VERSUS.registerLocale("en", {
     "results.csvYes": "yes",
     "results.csvNo": "no",
     "results.csvFilename": "priorities.csv",
-
     "lists.label": "My Lists",
     "lists.namePlaceholder": "List Name",
     "lists.save": "Save List",
@@ -65,35 +61,33 @@ VERSUS.registerLocale("en", {
     "lists.ranked": "ranked",
     "lists.saved": "Saved: {name}",
     "lists.nameNeeded": "Give the list a name first.",
-
     "panel.title": "Settings",
     "panel.close": "Close",
     "panel.language": "Language",
-    "panel.theme": "Theme",
+    "panel.theme": "Edit {style}",
     "panel.style": "Style",
     "panel.colors": "Colours",
     "panel.fonts": "Fonts",
     "panel.sizes": "Text Sizes",
     "panel.reset": "Reset to Style",
-    "panel.myStyles": "My Styles",
+    "panel.myStyles": "Style",
     "panel.styleName": "Style Name",
     "panel.save": "Save Style",
     "panel.apply": "Apply",
     "panel.delete": "Delete",
-    "panel.text": "Edit Text",
+    "panel.text": "Edit {language}",
     "panel.filter": "Filter Strings…",
     "panel.storageWarn": "Changes can't be saved in this browser — use export to keep them.",
     "panel.share": "Share & Export",
     "panel.exportSite": "Download Site (Single .html)",
     "panel.exportZip": "Download Site (.zip)",
-    "panel.exportErr": "Export failed — reload the page and try again.",
+    "panel.exportErr": "Export failed. Reload the page and try again.",
     "panel.exportStyle": "Export Style (.json)",
     "panel.exportLocale": "Export Language (.json)",
     "panel.import": "Import .json",
     "panel.imported": "Imported: {name}",
     "panel.importErr": "Not a valid Priorities file.",
     "panel.importIgnored": "· {n} unknown keys ignored",
-
     "color.paper": "Page Background",
     "color.paperGlow": "Background Glow",
     "color.panel": "Surface",
@@ -113,12 +107,10 @@ VERSUS.registerLocale("en", {
     "color.questionTeal": "Question Colour",
     "color.doneWash": "Finished Row",
     "color.err": "Error Text",
-
     "font.sans": "Body Font",
     "font.display": "Display Font",
     "font.serif": "Title Font",
     "font.mono": "Numeral Font",
-
     "size.title": "Brand",
     "size.question": "Question",
     "size.lede": "Notes",
@@ -129,6 +121,9 @@ VERSUS.registerLocale("en", {
     "size.item": "Ranked Items",
     "size.resultsTitle": "Results Heading",
     "size.meta": "Counters",
-    "size.fine": "Fine Print"
+    "size.fine": "Fine Print",
+    "input.helpBinary": "The fewest questions necessary.",
+    "input.helpSequential": "More questions with fewer option changes.",
+    "input.helpSimple": "Every pair compared once, with the same item staying on one side.  {count} comparisons for {n} items."
   }
 });
