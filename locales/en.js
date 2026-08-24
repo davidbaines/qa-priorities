@@ -1,12 +1,11 @@
 VERSUS.registerLocale("en", {
-  id: "en",
-  name: "English",
-  dir: "ltr",
-  plural: "one-other",
-  strings: {
+  "id": "en",
+  "name": "English",
+  "dir": "ltr",
+  "plural": "one-other",
+  "strings": {
     "app.title": "Versus — pairwise ranking",
     "app.defaultQuestion": "Which do you prefer?",
-
     "input.lede": "Put anything in a list: tasks, restaurants, ideas, todos, and rank them, by choosing between two at a time",
     "input.listLabel": "Your list",
     "input.listHint": "one item per line",
@@ -20,9 +19,9 @@ VERSUS.registerLocale("en", {
     "input.modeBinary": "Fewest questions",
     "input.modeSequential": "Top-down",
     "input.modeSimple": "Simple sort",
-    "input.helpBinary": "Halving search — the fewest questions (roughly 85–95 for 25 items).",
-    "input.helpSequential": "Walks down your ranking from the top, stopping when the item settles — more questions but predictable (roughly 170 for 25 items).",
-    "input.helpSimple": "Every pair compared once, with the same item staying on one side — {count} comparisons for {n} items.",
+    "input.helpBinary": "The fewest questions necessary.",
+    "input.helpSequential": "More questions with fewer option changes.",
+    "input.helpSimple": "Every pair compared once, with the same item staying on one side.  {count} comparisons for {n} items.",
     "input.fileTitle": "Load a .txt file, one item per line",
     "input.loadTxt": "Load .txt",
     "input.start": "Start ranking",
@@ -32,7 +31,6 @@ VERSUS.registerLocale("en", {
     "input.countItems.other": "{n} items",
     "input.countDupes.one": "· {n} duplicate removed",
     "input.countDupes.other": "· {n} duplicates removed",
-
     "compare.placingTag": "placing",
     "compare.ariaAnchor": "The item you are placing",
     "compare.ariaRanked": "Compare against this ranked item",
@@ -47,7 +45,6 @@ VERSUS.registerLocale("en", {
     "compare.equal": "Too close — equal",
     "compare.kbdHint": "<kbd>←</kbd> placing item &nbsp; <kbd>→</kbd> ranked item &nbsp; <kbd>↓</kbd> equal &nbsp; <kbd>⌫</kbd> back",
     "compare.kbdHintSimple": "<kbd>←</kbd> left item &nbsp; <kbd>→</kbd> right item &nbsp; <kbd>⌫</kbd> back",
-
     "results.title": "Your ranking",
     "results.showChecked": "Show checked items",
     "results.hideChecked": "Hide checked items",
@@ -59,7 +56,7 @@ VERSUS.registerLocale("en", {
     "results.doneStat": "{done} of {total} done",
     "results.scoreLabel": "SCORE",
     "results.empty": "Everything's checked off. Use “Show checked items” to see the full ranking.",
-    "results.footnote": "Order comes from your choices (a comparison sort — every item is distinct unless you marked a pair equal). <b>Score</b> is a Bradley–Terry strength estimate from the same choices, smoothed to respect your order and shifted so the lowest reads at least 1; read the gaps between bars as rough confidence, not exact distance. Tied scores mean two items were too close for the data to separate. Checked items are hidden by default.",
+    "results.footnote": "<b>The score</b> is a Bradley–Terry calculation from the choices made.",
     "results.csvRank": "Rank",
     "results.csvItem": "Item",
     "results.csvScore": "Score",
@@ -67,7 +64,6 @@ VERSUS.registerLocale("en", {
     "results.csvYes": "yes",
     "results.csvNo": "no",
     "results.csvFilename": "ranking.csv",
-
     "lists.label": "My lists",
     "lists.namePlaceholder": "List name",
     "lists.save": "Save list",
@@ -78,7 +74,6 @@ VERSUS.registerLocale("en", {
     "lists.ranked": "ranked",
     "lists.saved": "Saved: {name}",
     "lists.nameNeeded": "Give the list a name first.",
-
     "panel.title": "Customize",
     "panel.close": "Close",
     "panel.language": "Language",
@@ -106,7 +101,6 @@ VERSUS.registerLocale("en", {
     "panel.imported": "Imported: {name}",
     "panel.importErr": "Not a valid Versus file.",
     "panel.importIgnored": "· {n} unknown keys ignored",
-
     "color.paper": "Page background",
     "color.paperGlow": "Background glow",
     "color.panel": "Card background",
@@ -126,12 +120,10 @@ VERSUS.registerLocale("en", {
     "color.questionTeal": "Question colour",
     "color.doneWash": "Completed row",
     "color.err": "Error text",
-
     "font.sans": "Body font",
     "font.display": "Display font",
     "font.serif": "Title font",
     "font.mono": "Monospace font",
-
     "size.title": "Title",
     "size.question": "Question",
     "size.lede": "Intro text",
