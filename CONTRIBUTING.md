@@ -25,7 +25,34 @@ the safety gate).
 
 An easy way to draft a translation without touching code: open the live site,
 use **Edit text** to translate strings in place, then **Export language (.json)**
-and include that file in your PR — a maintainer can convert it.
+and include that file in your PR — a maintainer can convert it (see below).
+
+## Getting in-app edits into the repo
+
+Text edits made in the app are stored as a personal overlay in your browser.
+To turn them into a repo file there are two routes:
+
+- **The easy way:** **Customize → Share & export → Download site (.zip)**. The
+  ZIP's `locales/<code>.js` is regenerated from the app's live state with your
+  edits already merged in — copy it over the repo's copy, check the diff, done.
+  (The same applies to styles: the ZIP's `styles/<id>.js` includes any style
+  you saved in the app.)
+- **From a `.versus-locale.json` file:** the artifact holds the same locale
+  object as the repo file, just wrapped in a data envelope instead of a
+  registration call. Convert it with Node:
+
+  ```js
+  // convert.js — run: node convert.js en.versus-locale.json > locales/en.js
+  const artifact = require("./" + process.argv[2]);
+  const l = artifact.locale;
+  console.log("VERSUS.registerLocale(" + JSON.stringify(l.id) + ", "
+    + JSON.stringify(l, null, 2) + ");");
+  ```
+
+Why the app shares `.json` rather than `.js`: a `.js` file is executable code,
+and the app's Import button accepts files from anyone — it stays safe because
+imports are parsed and validated as pure data, never run. Repo-format `.js`
+files enter the project only through pull-request review.
 
 ## Add a style
 
