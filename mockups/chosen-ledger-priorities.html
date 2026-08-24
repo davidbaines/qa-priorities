@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Priorities — revised Ledger direction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gentium+Plus:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<style>
+  /* ============ PRIORITIES — revised Ledger direction ============
+     David's revisions 2026-08-24: all text in SIL Gentium Plus; app
+     renamed "Priorities"; the editable question IS the setup heading;
+     renamed sorting methods with comparison counts; no coaching labels
+     on the compare page; "Equal Priority"; keyboard = arrows select,
+     Enter/Space accepts (no visible instructions); Title Case UI. */
+  :root{
+    --paper:#F3F5F7; --paper-deep:#E9EDF0; --ink:#1E2A36; --ink-mid:#51616F;
+    --ink-faint:#93A1AD; --rule:#CBD4DB; --stamp:#BE4229;
+    --serif:"Gentium Plus",Gentium,Georgia,"Times New Roman",serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--serif);line-height:1.55;min-height:100dvh}
+  .demo-nav{position:sticky;top:0;z-index:99;display:flex;gap:2px;background:var(--paper);padding:8px 14px;border-bottom:1px solid var(--rule)}
+  .demo-nav button{font-family:var(--serif);font-size:14px;color:var(--ink-mid);background:none;border:none;padding:7px 12px;cursor:pointer}
+  .demo-nav button.on{color:var(--stamp);text-decoration:underline;text-underline-offset:4px}
+  .demo-nav .tag{margin-inline-start:auto;font-size:12px;color:var(--ink-faint);align-self:center;font-style:italic}
+  .stage{display:none}
+  .stage.on{display:block}
+
+  /* ---------- shared chrome ---------- */
+  .masthead{display:flex;align-items:baseline;gap:18px;padding:26px 30px 0;max-width:760px;margin:0 auto}
+  .word{font-size:24px;font-weight:700;letter-spacing:.01em}
+  .word::after{content:".";color:var(--stamp)}
+  .masthead nav{margin-inline-start:auto;display:flex;gap:18px}
+  .masthead a{font-size:14px;color:var(--ink-mid);text-decoration:none}
+  .masthead a:hover{color:var(--stamp)}
+  .sheet2{max-width:760px;margin:0 auto;padding:30px 30px 100px}
+
+  /* ---------- setup ---------- */
+  .q-heading{width:100%;border:0;outline:0;background:transparent;color:var(--ink);
+    font:italic 700 clamp(28px,4.6vw,42px)/1.25 var(--serif);text-align:center;margin:26px 0 10px;padding:4px 8px;
+    border-bottom:2px dashed transparent;transition:border-color .2s;cursor:text}
+  .q-heading:hover{border-color:var(--rule)}
+  .q-heading:focus{border-color:var(--stamp)}
+  .q-note{text-align:center;font-size:13px;font-style:italic;color:var(--ink-faint);margin:0 0 34px}
+  .entry-label{font-size:14px;letter-spacing:.08em;color:var(--ink-mid);margin:30px 0 4px;font-variant:small-caps}
+  textarea.entries{width:100%;border:0;border-top:1px solid var(--ink);outline:0;background:transparent;color:var(--ink);
+    font:400 19px/2 var(--serif);padding:10px 0;min-height:220px;resize:vertical;
+    background-image:repeating-linear-gradient(transparent,transparent 37.5px,var(--rule) 38px);background-attachment:local}
+  .methods2{border-top:1px solid var(--ink);margin-top:36px;padding-top:14px}
+  .m-grid{display:grid;grid-template-columns:auto repeat(3,minmax(110px,auto));gap:12px 30px;align-items:baseline;justify-content:start}
+  .m-label{font-size:14px;letter-spacing:.08em;color:var(--ink-mid);font-variant:small-caps}
+  .m-opt{background:none;border:none;cursor:pointer;text-align:center;padding:0;font-family:var(--serif);color:var(--ink-mid)}
+  .m-opt b{display:inline-block;font-size:19px;font-weight:700;color:var(--ink-mid);padding-bottom:3px;border-bottom:2px solid transparent}
+  .m-opt.on b{color:var(--ink);border-color:var(--stamp)}
+  .m-num{text-align:center;font-size:14px;color:var(--ink-faint);font-variant-numeric:tabular-nums}
+  .m-num.on{color:var(--ink)}
+  .begin{font:700 18px var(--serif);color:var(--paper);background:var(--ink);border:none;padding:13px 36px;cursor:pointer;letter-spacing:.02em;margin-top:38px;transition:background .2s,transform .12s}
+  .begin:hover{background:#2C3B49}
+  .begin:active{transform:scale(.985)}
+  .load-link{margin-inline-start:20px;font-size:15px;color:var(--ink-mid)}
+
+  /* ---------- compare ---------- */
+  .count-line{font-size:14px;color:var(--ink-faint);text-align:center;padding-top:44px;font-style:italic}
+  .ask2{font:italic 700 clamp(28px,4.5vw,42px)/1.25 var(--serif);text-align:center;max-width:24ch;margin:14px auto 64px;text-wrap:balance}
+  .verdict{display:grid;grid-template-columns:1fr 1px 1fr;max-width:900px;margin:0 auto;padding:0 30px;align-items:stretch}
+  .verdict .mid{background:var(--rule)}
+  .plea{background:none;border:none;cursor:pointer;padding:34px;font:400 clamp(24px,3.4vw,34px)/1.3 var(--serif);color:var(--ink);text-align:center;position:relative;transition:color .15s}
+  .plea:hover{color:var(--stamp)}
+  .plea .u{position:absolute;left:18%;right:18%;bottom:20px;height:3px;background:var(--stamp);transform:scaleX(0);transform-origin:left;transition:transform .25s cubic-bezier(.2,.8,.3,1);border-radius:2px}
+  .plea.pick .u{transform:scaleX(1)}
+  .plea.accepted{color:var(--stamp)}
+  .plea.accepted .u{height:5px}
+  .too-close{display:block;margin:58px auto 0;background:none;border:none;font:italic 400 18px var(--serif);color:var(--ink-mid);cursor:pointer;text-decoration:underline dotted;text-underline-offset:5px}
+  .too-close:hover{color:var(--stamp)}
+
+  /* ---------- results ---------- */
+  .res-head{max-width:760px;margin:34px auto 6px;padding:0 30px;display:flex;align-items:baseline;gap:16px}
+  .res-head h2{font-size:34px;font-weight:700;margin:0}
+  .res-head .q{font-style:italic;color:var(--ink-mid);margin-inline-start:auto;font-size:15px}
+  .ledger{max-width:760px;margin:0 auto;padding:6px 30px;list-style:none}
+  .lrow{display:grid;grid-template-columns:44px 1fr auto auto;gap:16px;align-items:center;padding:15px 0;border-bottom:1px solid var(--rule)}
+  .lrow .stamp{width:36px;height:36px;border:2px solid var(--stamp);color:var(--stamp);border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 17px var(--serif);transform:rotate(-4deg)}
+  .lrow.first .stamp{background:var(--stamp);color:var(--paper)}
+  .lrow .item{font-size:20px}
+  .lrow .score{font-size:16px;color:var(--ink-mid);font-variant-numeric:tabular-nums}
+  .lrow .done-box{width:20px;height:20px;border:1.5px solid var(--ink-faint);cursor:pointer}
+  .lrow.settled{color:var(--ink-faint)}
+  .lrow.settled .item{text-decoration:line-through;color:var(--ink-faint)}
+  .lrow.settled .stamp{border-color:var(--ink-faint);color:var(--ink-faint);background:none}
+  .ledger-note{max-width:760px;margin:18px auto;padding:0 30px;font:italic 400 15px/1.7 var(--serif);color:var(--ink-mid)}
+  .tools{max-width:760px;margin:26px auto 0;padding:0 30px;display:flex;gap:24px}
+  .tools a{font-size:15px;color:var(--ink-mid)}
+
+  /* ---------- phone ---------- */
+  .phones{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;padding:40px 20px;background:var(--paper-deep)}
+  .phone{width:390px;max-width:94vw;height:760px;border:10px solid #202B33;border-radius:38px;overflow:hidden;background:var(--paper);display:flex;flex-direction:column;box-shadow:0 40px 80px -44px rgba(20,35,45,.55)}
+  .phone .count-line{padding-top:40px}
+  .phone .ask2{font-size:25px;margin:10px auto 20px;max-width:20ch}
+  .p-verdict{flex:1;display:grid;grid-template-rows:1fr auto 1fr;padding:0 8px 10px}
+  .p-verdict .or{display:flex;align-items:center;gap:14px;padding:6px 22px}
+  .p-verdict .or .l{flex:1;height:1px;background:var(--rule)}
+  .p-verdict .or i{font:italic 400 17px var(--serif);color:var(--ink-mid)}
+  .p-verdict .plea{padding:16px 18px;font-size:25px}
+  .p-verdict .plea .u{bottom:8px}
+  .p-foot2{display:flex;justify-content:center;padding:6px 0 24px}
+  @media (max-width:700px){
+    .verdict{grid-template-columns:1fr}
+    .verdict .mid{height:1px;width:60%;margin:0 auto}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--stamp);outline-offset:3px}
+</style>
+</head>
+<body>
+<nav class="demo-nav">
+  <button class="on" data-s="setup">Setup</button>
+  <button data-s="compare">Compare</button>
+  <button data-s="results">Results</button>
+  <button data-s="phone">Phone</button>
+  <span class="tag">Priorities — Revised Ledger</span>
+</nav>
+
+<!-- ================= SETUP ================= -->
+<section class="stage on" id="setup">
+  <header class="masthead">
+    <span class="word">Priorities</span>
+    <nav><a href="#">My Lists (3)</a><a href="#">Settings</a></nav>
+  </header>
+  <div class="sheet2">
+    <input class="q-heading" value="Which has higher priority?" spellcheck="false">
+    <div class="entry-label">Your List — One Per Line</div>
+    <textarea class="entries" spellcheck="false">Fix the gate latch
+Book flights to Madang
+Reply to the survey team
+Draft the language report
+Back up the field laptops
+Plan Saturday's market run</textarea>
+    <div class="methods2">
+      <div class="m-grid">
+        <span class="m-label">Sorting method:</span>
+        <button class="m-opt on"><b>Quickest</b></button>
+        <button class="m-opt"><b>Insertion</b></button>
+        <button class="m-opt"><b>Compare all</b></button>
+        <span class="m-label">No. of comparisons:</span>
+        <span class="m-num on">~11</span>
+        <span class="m-num">~17</span>
+        <span class="m-num">15</span>
+      </div>
+    </div>
+    <button class="begin">Begin</button>
+    <a class="load-link" href="#">Load a .txt File</a>
+  </div>
+</section>
+
+<!-- ================= COMPARE ================= -->
+<section class="stage" id="compare">
+  <header class="masthead">
+    <span class="word">Priorities</span>
+    <nav><a href="#">My Lists</a></nav>
+  </header>
+  <div class="count-line">Question 4 of ~11 · Placing 3 of 6</div>
+  <h2 class="ask2">Which has higher priority?</h2>
+  <div class="verdict">
+    <button class="plea">Reply to the survey team<span class="u"></span></button>
+    <div class="mid"></div>
+    <button class="plea">Book flights to Madang<span class="u"></span></button>
+  </div>
+  <button class="too-close">Equal Priority</button>
+</section>
+
+<!-- ================= RESULTS ================= -->
+<section class="stage" id="results">
+  <header class="masthead">
+    <span class="word">Priorities</span>
+    <nav><a href="#">Download CSV</a><a href="#">Start Over</a></nav>
+  </header>
+  <div class="res-head">
+    <h2>The Order</h2>
+    <span class="q">"Which has higher priority?"</span>
+  </div>
+  <ol class="ledger">
+    <li class="lrow first"><span class="stamp">1</span><span class="item">Reply to the survey team</span><span class="score">147</span><span class="done-box"></span></li>
+    <li class="lrow"><span class="stamp">2</span><span class="item">Book flights to Madang</span><span class="score">121</span><span class="done-box"></span></li>
+    <li class="lrow"><span class="stamp">3</span><span class="item">Fix the gate latch</span><span class="score">98</span><span class="done-box"></span></li>
+    <li class="lrow settled"><span class="stamp">4</span><span class="item">Back up the field laptops</span><span class="score">84</span><span class="done-box" style="background:var(--ink-faint)"></span></li>
+    <li class="lrow"><span class="stamp">5</span><span class="item">Draft the language report</span><span class="score">61</span><span class="done-box"></span></li>
+    <li class="lrow"><span class="stamp">6</span><span class="item">Plan Saturday's market run</span><span class="score">47</span><span class="done-box"></span></li>
+  </ol>
+  <p class="ledger-note">The order is exactly your answers. The score is a strength estimate from the same answers — read gaps as confidence, not distance. Finished items stay in the ledger, struck through, so the numbering never skips.</p>
+  <div class="tools"><a href="#">Hide Finished</a></div>
+</section>
+
+<!-- ================= PHONE ================= -->
+<section class="stage" id="phone">
+  <div class="phones">
+    <div class="phone">
+      <div class="count-line">Question 4 of ~11</div>
+      <h2 class="ask2">Which has higher priority?</h2>
+      <div class="p-verdict">
+        <button class="plea">Reply to the survey team<span class="u"></span></button>
+        <div class="or"><span class="l"></span><i>or</i><span class="l"></span></div>
+        <button class="plea">Book flights to Madang<span class="u"></span></button>
+      </div>
+      <div class="p-foot2"><button class="too-close" style="margin:0">Equal Priority</button></div>
+    </div>
+  </div>
+</section>
+
+<script>
+document.querySelectorAll(".demo-nav button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".demo-nav button").forEach(x=>x.classList.remove("on"));
+    document.querySelectorAll(".stage").forEach(s=>s.classList.remove("on"));
+    b.classList.add("on");
+    document.getElementById(b.dataset.s).classList.add("on");
+  });
+});
+// Interaction model: click accepts directly (tap on phone). Arrow keys only
+// select and highlight; Enter or Space accepts the highlighted option.
+let sel = null;
+const pleas = [...document.querySelectorAll("#compare .plea")];
+function setSel(i){
+  sel = i;
+  pleas.forEach((p,j)=> p.classList.toggle("pick", j === i));
+}
+function accept(p){
+  p.classList.add("accepted");
+  setTimeout(()=>{ p.classList.remove("accepted","pick"); sel = null; }, 700);
+}
+pleas.forEach((p,i)=> p.addEventListener("click", ()=>{ setSel(i); accept(p); }));
+document.addEventListener("keydown", e=>{
+  if(!document.getElementById("compare").classList.contains("on")) return;
+  if(e.key === "ArrowLeft"){ e.preventDefault(); setSel(0); }
+  else if(e.key === "ArrowRight"){ e.preventDefault(); setSel(1); }
+  else if((e.key === "Enter" || e.key === " ") && sel != null){ e.preventDefault(); accept(pleas[sel]); }
+});
+document.querySelectorAll("#phone .plea").forEach(p=>{
+  p.addEventListener("click", ()=>{ p.classList.add("pick"); setTimeout(()=>p.classList.remove("pick"), 700); });
+});
+</script>
+</body>
+</html>
