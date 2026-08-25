@@ -61,10 +61,7 @@
 
 <style>
   html.boot{visibility:hidden}
-  :root{
-    --radius:14px; --shadow:0 1px 2px rgba(20,32,43,.05), 0 8px 24px -12px rgba(20,32,43,.18);
-    --shadow-lift:0 2px 6px rgba(20,32,43,.08), 0 18px 40px -16px rgba(20,32,43,.30);
-  }
+  :root{--shadow-lift:0 2px 6px rgba(20,32,43,.08), 0 18px 40px -16px rgba(20,32,43,.30)}
   *{box-sizing:border-box}
   html,body{margin:0}
   body{
@@ -110,10 +107,10 @@
   #items::placeholder{color:var(--faint)}
   #items:focus{border-top-color:var(--accent)}
 
-  .q-input{
-    width:100%;font-family:var(--serif);font-size:15px;color:var(--ink);background:var(--panel);
-    border:1px solid var(--line);border-radius:6px;padding:10px 14px;outline:none;transition:border-color .15s;
-  }
+  /* Text fields share one frame; each rule below keeps its own type, radius and padding. */
+  .q-input,.ovr-input,.ctl-row select.ctl-select,.ctl-row input.ctl-num{color:var(--ink);background:var(--panel);border:1px solid var(--line)}
+  .ovr-input,.ctl-row select.ctl-select,.ctl-row input.ctl-num{font-size:var(--fs-label);border-radius:8px}
+  .q-input{width:100%;font-family:var(--serif);font-size:15px;border-radius:6px;padding:10px 14px;outline:none;transition:border-color .15s}
   .q-input:focus{border-color:var(--accent)}
 
   .methods{border-top:1px solid var(--ink);margin-top:34px;padding-top:16px}
@@ -139,10 +136,7 @@
   .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .btn.primary{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}
   .btn.primary:hover{background:var(--primary-ink);color:var(--on-primary)}
-  .btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
-  .btn.ghost:hover{color:var(--accent)}
   .btn[disabled]{opacity:.4;pointer-events:none}
-  .btn svg{width:16px;height:16px;flex:none}
   .file-btn{position:relative;overflow:hidden}
   .file-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
   .err{color:var(--err);font-size:14px;margin-top:12px;min-height:1.2em;font-weight:500}
@@ -229,8 +223,8 @@
   .ctl-group{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin:14px 0 4px}
   .ctl-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:3px 0;font-size:var(--fs-label);color:var(--muted);cursor:pointer}
   .ctl-row input[type=color]{width:36px;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:1px;cursor:pointer;flex:none}
-  .ctl-row select.ctl-select{max-width:170px;font-family:var(--sans);font-size:var(--fs-label);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
-  .ctl-row input.ctl-num{width:74px;font-family:var(--mono);font-size:var(--fs-label);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+  .ctl-row select.ctl-select{max-width:170px;font-family:var(--sans);padding:4px 8px}
+  .ctl-row input.ctl-num{width:74px;font-family:var(--mono);padding:4px 8px}
   .ctl-reset{margin-top:14px;width:100%}
   .save-row{display:flex;gap:8px;align-items:center}
   #sec-style .save-row{margin-top:10px}
@@ -246,7 +240,7 @@
   .ovr-row{padding:5px 0}
   .ovr-key{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-bottom:3px}
   .ovr-row.changed .ovr-key{color:var(--accent-deep);font-weight:700}
-  .ovr-input{width:100%;font-family:var(--sans);font-size:var(--fs-label);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 9px;resize:vertical}
+  .ovr-input{width:100%;font-family:var(--sans);padding:6px 9px;resize:vertical}
   .ovr-row.changed .ovr-input{border-color:var(--accent)}
   .share-col{display:flex;flex-direction:column;gap:8px;align-items:stretch}
   .share-msg{font-size:var(--fs-fine);color:var(--muted);min-height:1.2em}
@@ -448,7 +442,14 @@
 
   const $ = id => document.getElementById(id);
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const ESC = {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"};
+  const esc = s => String(s).replace(/[&<>"']/g, c => ESC[c]);
+  function mkEl(tag, className, text){
+    const node = document.createElement(tag);
+    if(className) node.className = className;
+    if(text != null) node.textContent = text;
+    return node;
+  }
 
   // ---------- persistence ----------
   // Versioned envelopes in localStorage; falls back to an in-memory mirror when
@@ -481,16 +482,14 @@
   let overrides = {};   // {localeId: {key: value}} — the user's personal localization layer
   function saveOverrides(){ STORE.set(K_OVR, {schema:1, overrides}); }
   function savePrefs(){ STORE.set(K_PREFS, {schema:1, locale:i18n.locale, styleId:theming.styleId, sidebar:sbOpen}); }
-  function saveCustomStyles(){
-    const styles = {};
-    Object.keys(VERSUS.styles).forEach(id=>{ if(VERSUS.styles[id].custom) styles[id] = VERSUS.styles[id]; });
-    STORE.set(K_STYLES, {schema:1, styles});
+  const customIds = reg => Object.keys(reg).filter(id => reg[id].custom);
+  function onlyCustom(reg){
+    const out = {};
+    customIds(reg).forEach(id => out[id] = reg[id]);
+    return out;
   }
-  function saveCustomLocales(){
-    const locales = {};
-    Object.keys(VERSUS.locales).forEach(id=>{ if(VERSUS.locales[id].custom) locales[id] = VERSUS.locales[id]; });
-    STORE.set(K_LOCALES, {schema:1, locales});
-  }
+  function saveCustomStyles(){ STORE.set(K_STYLES, {schema:1, styles: onlyCustom(VERSUS.styles)}); }
+  function saveCustomLocales(){ STORE.set(K_LOCALES, {schema:1, locales: onlyCustom(VERSUS.locales)}); }
   let lists = {};   // {id: {id, name, question, items[], results[]|null, createdAt, updatedAt}}
   function saveLists(){ STORE.set(K_LISTS, {schema:1, lists}); }
   let workTimer = null;
@@ -544,6 +543,20 @@
     const rule = PLURAL_RULES[loc && loc.plural] || PLURAL_RULES["one-other"];
     return key + "." + rule(n);
   }
+  // A localized string rendered as HTML: the text is escaped first, then its {slots}
+  // are filled with markup we built ourselves (never with anything a user typed).
+  function tHTML(key, slots){
+    let s = esc(t(key));
+    for(const k in slots) s = s.split("{" + k + "}").join(slots[k]);
+    return s;
+  }
+  // Strings bound via data-i18n-html may carry limited inline markup (the footnote's
+  // <b>). They can arrive from imported locale files or user overrides, so everything
+  // is escaped and only bare <b>/<i>/<em>/<strong> tags are re-allowed — never
+  // attributes, never other elements.
+  function tMarkup(key){
+    return esc(t(key)).replace(/&lt;(\/?)(b|i|em|strong)&gt;/g, "<$1$2>");
+  }
   let lastDefaultQ = "";
   // The question heading is a textarea so long questions wrap on phones; it grows to fit.
   function autoGrowQuestion(){
@@ -557,7 +570,7 @@
     document.querySelectorAll("[data-i18n-placeholder]").forEach(el => el.placeholder = t(el.dataset.i18nPlaceholder));
     document.querySelectorAll("[data-i18n-title]").forEach(el => el.title = t(el.dataset.i18nTitle));
     document.querySelectorAll("[data-i18n-aria-label]").forEach(el => el.setAttribute("aria-label", t(el.dataset.i18nAriaLabel)));
-    document.querySelectorAll("[data-i18n-html]").forEach(el => el.innerHTML = t(el.dataset.i18nHtml));
+    document.querySelectorAll("[data-i18n-html]").forEach(el => el.innerHTML = tMarkup(el.dataset.i18nHtml));
     // dynamic bits that live in JS
     const q = $("question");
     if(q.value === "" || q.value === lastDefaultQ) q.value = t("app.defaultQuestion");
@@ -574,17 +587,18 @@
     document.documentElement.lang = id;
     document.documentElement.dir = loc.dir === "rtl" ? "rtl" : "ltr";
     applyStrings();
-    buildLocaleSelect(); buildThemeControls(); buildOverrideEditor(); buildSavedLists();
+    buildSelect("locale-select", VERSUS.locales, id); buildThemeControls(); buildOverrideEditor(); buildSavedLists();
     savePrefs();
     return true;
   }
-  function buildLocaleSelect(){
-    const sel = $("locale-select"); if(!sel) return;
+  // One <select> builder for both registries: ids sorted, labelled by their def's name.
+  function buildSelect(selectId, defs, activeId){
+    const sel = $(selectId); if(!sel) return;
     sel.innerHTML = "";
-    Object.keys(VERSUS.locales).sort().forEach(id=>{
-      const o = document.createElement("option");
-      o.value = id; o.textContent = VERSUS.locales[id].name || id;
-      if(id === i18n.locale) o.selected = true;
+    Object.keys(defs).sort().forEach(id=>{
+      const o = mkEl("option", null, defs[id].name || id);
+      o.value = id;
+      if(id === activeId) o.selected = true;
       sel.appendChild(o);
     });
   }
@@ -672,33 +686,24 @@
     { label:"Verdana",             stack:'Verdana,Geneva,sans-serif' },
     { label:"Trebuchet MS",        stack:'"Trebuchet MS",Tahoma,sans-serif' },
   ];
-  function buildStyleSelect(){
-    const sel = $("style-select"); if(!sel) return;
-    sel.innerHTML = "";
-    Object.keys(VERSUS.styles).sort().forEach(id=>{
-      const o = document.createElement("option");
-      o.value = id; o.textContent = VERSUS.styles[id].name || id;
-      if(id === theming.styleId) o.selected = true;
-      sel.appendChild(o);
-    });
-  }
   function ctlRow(parent, labelText){
-    const row = document.createElement("label"); row.className = "ctl-row";
-    const span = document.createElement("span"); span.textContent = labelText;
-    row.appendChild(span); parent.appendChild(row);
+    const row = mkEl("label", "ctl-row");
+    row.appendChild(mkEl("span", null, labelText));
+    parent.appendChild(row);
     return row;
   }
-  function groupLabel(parent, key){
-    const h = document.createElement("div"); h.className = "ctl-group";
-    h.textContent = t(key); parent.appendChild(h);
+  function ctlSection(id, titleKey){
+    const box = $(id);
+    box.innerHTML = "";
+    box.appendChild(mkEl("div", "ctl-group", t(titleKey)));
+    return box;
   }
   function buildThemeControls(){
     if(!$("color-controls")) return;
-    buildStyleSelect();
+    buildSelect("style-select", VERSUS.styles, theming.styleId);
     const cur = currentTokens();
 
-    const colors = $("color-controls"); colors.innerHTML = "";
-    groupLabel(colors, "panel.colors");
+    const colors = ctlSection("color-controls", "panel.colors");
     for(const k in TOKEN_MAP.colors){
       const cssVar = TOKEN_MAP.colors[k];
       const row = ctlRow(colors, t("color." + k));
@@ -708,23 +713,22 @@
       row.appendChild(inp);
     }
 
-    const fonts = $("font-controls"); fonts.innerHTML = "";
-    groupLabel(fonts, "panel.fonts");
+    const fonts = ctlSection("font-controls", "panel.fonts");
     for(const k in TOKEN_MAP.fonts){
       const cssVar = TOKEN_MAP.fonts[k];
       const row = ctlRow(fonts, t("font." + k));
-      const sel = document.createElement("select"); sel.className = "ctl-select";
+      const sel = mkEl("select", "ctl-select");
       const curStack = cur[cssVar] || "";
       let matched = false;
       FONT_CHOICES.forEach((c, i)=>{
-        const o = document.createElement("option");
-        o.value = i; o.textContent = c.label;
+        const o = mkEl("option", null, c.label);
+        o.value = i;
         if(c.stack === curStack){ o.selected = true; matched = true; }
         sel.appendChild(o);
       });
       if(!matched){
-        const o = document.createElement("option");
-        o.value = "current"; o.textContent = "•"; o.selected = true;
+        const o = mkEl("option", null, "•");
+        o.value = "current"; o.selected = true;
         sel.insertBefore(o, sel.firstChild);
       }
       sel.addEventListener("change", ()=>{
@@ -735,13 +739,12 @@
       row.appendChild(sel);
     }
 
-    const sizes = $("size-controls"); sizes.innerHTML = "";
-    groupLabel(sizes, "panel.sizes");
+    const sizes = ctlSection("size-controls", "panel.sizes");
     for(const k in TOKEN_MAP.sizes){
       const cssVar = TOKEN_MAP.sizes[k];
       const row = ctlRow(sizes, t("size." + k));
-      const inp = document.createElement("input"); inp.type = "number";
-      inp.className = "ctl-num"; inp.min = 8; inp.max = 96; inp.step = 0.5;
+      const inp = mkEl("input", "ctl-num"); inp.type = "number";
+      inp.min = 8; inp.max = 96; inp.step = 0.5;
       inp.value = parseFloat(cur[cssVar]) || "";
       inp.addEventListener("input", ()=>{ if(inp.value) editToken(cssVar, inp.value + "px"); });
       row.appendChild(inp);
@@ -761,9 +764,14 @@
     }
     return def;
   }
+  // Built-in ids are never overwritten: suffix until the id is free or already ours.
+  function claimId(reg, base, suffix){
+    let id = base;
+    while(reg[id] && !reg[id].custom) id += suffix;
+    return id;
+  }
   function saveStyleAs(name){
-    let id = slug(name);
-    while(VERSUS.styles[id] && !VERSUS.styles[id].custom) id += "-custom";
+    const id = claimId(VERSUS.styles, slug(name), "-custom");
     VERSUS.registerStyle(id, tokensToStyleDef(id, name));
     saveCustomStyles();
     applyStyle(id);
@@ -772,21 +780,19 @@
     if(!VERSUS.styles[id] || !VERSUS.styles[id].custom) return;
     delete VERSUS.styles[id];
     saveCustomStyles();
-    if(theming.styleId === id){
-      const ids = Object.keys(VERSUS.styles);
-      applyStyle(pick(VERSUS.config.defaultStyle || VERSUS.defaultStyle, ids));
-    } else buildThemeControls();
+    if(theming.styleId === id)
+      applyStyle(pick(VERSUS.config.defaultStyle || VERSUS.defaultStyle, Object.keys(VERSUS.styles)));
+    else buildThemeControls();
   }
   function buildCustomStyleList(){
     const ul = $("custom-style-list"); if(!ul) return;
     ul.innerHTML = "";
-    Object.keys(VERSUS.styles).filter(id=>VERSUS.styles[id].custom).sort().forEach(id=>{
-      const li = document.createElement("li"); li.className = "style-item";
-      const span = document.createElement("span"); span.className = "style-item-name";
-      span.textContent = VERSUS.styles[id].name || id;
+    customIds(VERSUS.styles).sort().forEach(id=>{
+      const li = mkEl("li", "style-item");
+      const span = mkEl("span", "style-item-name", VERSUS.styles[id].name || id);
       const ren = miniBtn(t("panel.rename"), ()=>{
-        const inp = document.createElement("input");
-        inp.type = "text"; inp.className = "q-input rename-input";
+        const inp = mkEl("input", "q-input rename-input");
+        inp.type = "text";
         inp.value = VERSUS.styles[id].name || id;
         li.replaceChild(inp, span);
         inp.focus(); inp.select();
@@ -816,22 +822,24 @@
   // Import feedback surfaces in the panel's message line AND as a toast, since
   // imports can now also start from the lists sidebar with the panel closed.
   function shareMsg(msg){
-    const el = $("share-msg"); if(el) el.textContent = msg;
+    const line = $("share-msg"); if(line) line.textContent = msg;
     showNotice(msg);
   }
+  function importedMsg(name, ignored){
+    shareMsg(t("panel.imported", {name}) + (ignored ? " " + t("panel.importIgnored", {n:ignored}) : ""));
+  }
+  function downloadJSON(payload, filename){
+    downloadBlob(JSON.stringify(payload, null, 2), "application/json", filename);
+  }
   function exportCurrentStyle(){
+    // The current style plus any unsaved edits — not the registered def.
     const def = tokensToStyleDef(theming.styleId, (VERSUS.styles[theming.styleId] || {}).name || theming.styleId);
-    def.id = theming.styleId; delete def.custom;
-    downloadBlob(JSON.stringify({format:"versus-style", formatVersion:1, style:def}, null, 2),
-      "application/json", theming.styleId + ".versus-style.json");
+    delete def.custom;
+    downloadJSON({format:"versus-style", formatVersion:1, style:def}, theming.styleId + ".versus-style.json");
   }
   function exportCurrentLocale(){
-    const loc = VERSUS.locales[i18n.locale];
-    const strings = Object.assign({}, loc.strings, overrides[i18n.locale] || {});
-    const out = { id: i18n.locale, name: loc.name || i18n.locale, dir: loc.dir || "ltr",
-                  plural: loc.plural || "one-other", strings };
-    downloadBlob(JSON.stringify({format:"versus-locale", formatVersion:1, locale:out}, null, 2),
-      "application/json", i18n.locale + ".versus-locale.json");
+    downloadJSON({format:"versus-locale", formatVersion:1, locale: exportedLocale(i18n.locale)},
+      i18n.locale + ".versus-locale.json");
   }
   function importArtifact(file){
     const r = new FileReader();
@@ -849,8 +857,7 @@
   }
   function importStyle(raw){
     const name = String(raw.name || raw.id || "style");
-    let id = slug(String(raw.id || name));
-    while(VERSUS.styles[id] && !VERSUS.styles[id].custom) id += "-import";
+    const id = claimId(VERSUS.styles, slug(String(raw.id || name)), "-import");
     const def = { id, name, custom:true, colors:{}, fonts:{}, sizes:{}, googleFonts:[] };
     let ignored = 0;
     ["colors","fonts","sizes"].forEach(g=>{
@@ -863,14 +870,13 @@
     if(Array.isArray(raw.googleFonts)) def.googleFonts = raw.googleFonts.filter(f=> typeof f === "string");
     VERSUS.registerStyle(id, def);
     saveCustomStyles(); applyStyle(id);
-    shareMsg(t("panel.imported", {name}) + (ignored ? " " + t("panel.importIgnored", {n:ignored}) : ""));
+    importedMsg(name, ignored);
   }
   function importLocale(raw){
     const fb = VERSUS.locales[i18n.fallback];
     const knownKeys = new Set(fb ? Object.keys(fb.strings) : []);
     const name = String(raw.name || raw.id || "locale");
-    let id = slug(String(raw.id || name));
-    while(VERSUS.locales[id] && !VERSUS.locales[id].custom) id += "-import";
+    const id = claimId(VERSUS.locales, slug(String(raw.id || name)), "-import");
     const def = { id, name, custom:true,
       dir: raw.dir === "rtl" ? "rtl" : "ltr",
       plural: PLURAL_RULES[raw.plural] ? raw.plural : "one-other", strings:{} };
@@ -882,7 +888,7 @@
     }
     VERSUS.registerLocale(id, def);
     saveCustomLocales(); applyLocale(id);
-    shareMsg(t("panel.imported", {name}) + (ignored ? " " + t("panel.importIgnored", {n:ignored}) : ""));
+    importedMsg(name, ignored);
   }
 
   // ---------- site export (single HTML / ZIP) ----------
@@ -978,19 +984,18 @@
     const shell = buildShell({dataVersion:1, standalone:false});
     if(!shell) return shareMsg(t("panel.exportErr"));
     const lids = Object.keys(VERSUS.locales), sids = Object.keys(VERSUS.styles);
+    const assign = (name, value) => "VERSUS." + name + " = " + JSON.stringify(value) + ";\n";
+    const register = (fn, id, def) =>
+      "VERSUS." + fn + "(" + JSON.stringify(id) + ", " + JSON.stringify(def, null, 2) + ");\n";
     const files = [{name:"index.html", text: shell}];
     files.push({name:"locales/manifest.js", text:
-      "VERSUS.localeList = " + JSON.stringify(lids) + ";\n" +
-      "VERSUS.defaultLocale = " + JSON.stringify(i18n.locale) + ";\n" +
-      "VERSUS.fallbackLocale = " + JSON.stringify(i18n.fallback) + ";\n"});
+      assign("localeList", lids) + assign("defaultLocale", i18n.locale) + assign("fallbackLocale", i18n.fallback)});
     lids.forEach(id=> files.push({name:"locales/" + id + ".js",
-      text: "VERSUS.registerLocale(" + JSON.stringify(id) + ", " + JSON.stringify(exportedLocale(id), null, 2) + ");\n"}));
+      text: register("registerLocale", id, exportedLocale(id))}));
     files.push({name:"styles/manifest.js", text:
-      "VERSUS.styleList = " + JSON.stringify(sids) + ";\n" +
-      "VERSUS.defaultStyle = " + JSON.stringify(theming.styleId) + ";\n" +
-      "VERSUS.fallbackStyle = " + JSON.stringify(theming.fallbackId) + ";\n"});
+      assign("styleList", sids) + assign("defaultStyle", theming.styleId) + assign("fallbackStyle", theming.fallbackId)});
     sids.forEach(id=> files.push({name:"styles/" + id + ".js",
-      text: "VERSUS.registerStyle(" + JSON.stringify(id) + ", " + JSON.stringify(exportedStyle(id), null, 2) + ");\n"}));
+      text: register("registerStyle", id, exportedStyle(id))}));
     downloadBlob(makeZip(files), "application/zip", "versus.zip");
   }
 
@@ -1055,9 +1060,7 @@
     show("input"); buildSavedLists();
   }
   function miniBtn(label, fn, cls){
-    const b = document.createElement("button");
-    b.className = "mini-btn" + (cls ? " " + cls : "");
-    b.textContent = label;
+    const b = mkEl("button", "mini-btn" + (cls ? " " + cls : ""), label);
     b.addEventListener("click", fn);
     return b;
   }
@@ -1067,13 +1070,11 @@
     const ids = Object.keys(lists).sort((a,b)=> String(lists[b].updatedAt||"").localeCompare(String(lists[a].updatedAt||"")));
     ids.forEach(id=>{
       const l = lists[id];
-      const li = document.createElement("li");
-      li.className = "list-item" + (id === state.listId ? " active" : "");
-      const main = document.createElement("div"); main.className = "li-main";
-      const name = document.createElement("div"); name.className = "li-name"; name.textContent = l.name;
-      const meta = document.createElement("div"); meta.className = "li-meta";
-      meta.textContent = t(pluralKey("input.countItems", l.items.length), {n: l.items.length})
-        + (l.results ? " · " + t("lists.ranked") : "");
+      const li = mkEl("li", "list-item" + (id === state.listId ? " active" : ""));
+      const main = mkEl("div", "li-main");
+      const name = mkEl("div", "li-name", l.name);
+      const meta = mkEl("div", "li-meta", t(pluralKey("input.countItems", l.items.length), {n: l.items.length})
+        + (l.results ? " · " + t("lists.ranked") : ""));
       main.appendChild(name); main.appendChild(meta);
       main.addEventListener("click", ()=> loadList(id));
       const ex = miniBtn(t("lists.export"), ()=> exportList(id));
@@ -1092,6 +1093,10 @@
     });
   }
   let sbOpen = false;
+  function setMode(mode){   // single owner of the sorting mode + its button highlight
+    state.mode = mode;
+    renderMethodCounts();
+  }
   function setSidebar(open){
     sbOpen = open;
     $("lists-sidebar").classList.toggle("open", open);
@@ -1102,8 +1107,7 @@
     const l = lists[id]; if(!l) return;
     const out = {name:l.name, question:l.question, items:l.items, results:l.results,
                  createdAt:l.createdAt, updatedAt:l.updatedAt};
-    downloadBlob(JSON.stringify({format:"versus-list", formatVersion:1, list:out}, null, 2),
-      "application/json", slug(l.name) + ".versus-list.json");
+    downloadJSON({format:"versus-list", formatVersion:1, list:out}, slug(l.name) + ".versus-list.json");
   }
   function importList(raw){
     let name = String(raw.name || "list");
@@ -1129,7 +1133,7 @@
       createdAt: typeof raw.createdAt === "string" ? raw.createdAt : now, updatedAt: now};
     saveLists();
     loadList(id);   // imported lists load immediately, same as imported styles/locales apply
-    shareMsg(t("panel.imported", {name}) + (ignored ? " " + t("panel.importIgnored", {n:ignored}) : ""));
+    importedMsg(name, ignored);
   }
 
   // ---------- per-string override editor ("personal localization") ----------
@@ -1143,13 +1147,11 @@
     keys.forEach(key=>{
       const baseVal = String(resolveNoOverride(key));
       if(filter && !(key.toLowerCase().includes(filter) || baseVal.toLowerCase().includes(filter))) return;
-      const row = document.createElement("div");
-      row.className = "ovr-row" + (ov[key] != null ? " changed" : "");
-      const label = document.createElement("div"); label.className = "ovr-key"; label.textContent = key;
+      const row = mkEl("div", "ovr-row" + (ov[key] != null ? " changed" : ""));
+      const label = mkEl("div", "ovr-key", key);
       const multi = baseVal.includes("\n");
-      const inp = document.createElement(multi ? "textarea" : "input");
+      const inp = mkEl(multi ? "textarea" : "input", "ovr-input");
       if(multi) inp.rows = 3; else inp.type = "text";
-      inp.className = "ovr-input";
       inp.value = ov[key] != null ? ov[key] : baseVal;
       inp.addEventListener("input", ()=>{
         if(inp.value === resolveNoOverride(key)){
@@ -1178,25 +1180,24 @@
   function parseItems(text){
     const seen = new Set(); const out = []; let dupes = 0;
     text.split(/\r?\n/).forEach(line=>{
-      const t = line.replace(/\s+/g," ").trim();
-      if(!t) return;
-      const key = t.toLowerCase();
+      const item = line.replace(/\s+/g," ").trim();
+      if(!item) return;
+      const key = item.toLowerCase();
       if(seen.has(key)){ dupes++; return; }
-      seen.add(key); out.push(t);
+      seen.add(key); out.push(item);
     });
     return { items: out, dupes };
   }
   function refreshCount(){
     const { items, dupes } = parseItems($("items").value);
-    let s = esc(t(pluralKey("input.countItems", items.length)))
-      .split("{n}").join('<span class="n">' + items.length + '</span>');
-    if(dupes) s += ' <span class="rm">' + esc(t(pluralKey("input.countDupes", dupes), {n:dupes})) + '</span>';
+    let s = tHTML(pluralKey("input.countItems", items.length), {n: '<span class="n">' + items.length + '</span>'});
+    if(dupes) s += ' <span class="rm">' + tHTML(pluralKey("input.countDupes", dupes), {n: dupes}) + '</span>';
     $("count").innerHTML = s;
-    renderMethodCounts();   // comparison counts under each sorting method are live
+    renderMethodCounts(items.length);   // comparison counts under each sorting method are live
   }
-  function renderMethodCounts(){
+  function renderMethodCounts(n){
     if(!$("n-binary")) return;
-    const n = parseItems($("items").value).items.length;
+    if(n == null) n = parseItems($("items").value).items.length;
     [["n-binary","binary",false],["n-sequential","sequential",false],["n-simple","simple",true]].forEach(([id, mode, exact])=>{
       const c = n > 1 ? estComparisons(n, mode) : 0;
       $(id).textContent = (exact || c === 0 ? "" : "~") + c;
@@ -1399,18 +1400,15 @@
     $("txt-ranked").textContent = p.b;
 
     const done = state.comparisons.length;
-    $("count-step").innerHTML = esc(t(simple ? "compare.comparisonsExact" : "compare.comparisonsStep"))
-      .split("{n}").join("<b>" + (done + 1) + "</b>")
-      .split("{total}").join(String(state.estTotal));
+    $("count-step").innerHTML = tHTML(simple ? "compare.comparisonsExact" : "compare.comparisonsStep",
+      {n: "<b>" + (done + 1) + "</b>", total: state.estTotal});
     if(simple){
-      $("place-step").innerHTML = esc(t("compare.comparingStep"))
-        .split("{n}").join("<b>" + (p.aIdx + 1) + "</b>")
-        .split("{total}").join(String(state.items.length - 1));
+      $("place-step").innerHTML = tHTML("compare.comparingStep",
+        {n: "<b>" + (p.aIdx + 1) + "</b>", total: state.items.length - 1});
     } else {
       const placing = Math.min(state.sorted.length + 1, state.items.length);
-      $("place-step").innerHTML = esc(t("compare.placingStep"))
-        .split("{n}").join("<b>" + placing + "</b>")
-        .split("{total}").join(String(state.items.length));
+      $("place-step").innerHTML = tHTML("compare.placingStep",
+        {n: "<b>" + placing + "</b>", total: state.items.length});
     }
 
     setSelection(null);
@@ -1445,33 +1443,26 @@
     $("results-q").textContent = state.question;
 
     const visible = state.results.filter(r=> state.showChecked || !r.done);
-    if(visible.length === 0){
-      const li = document.createElement("li");
-      li.className = "empty";
-      li.textContent = t("results.empty");
-      list.appendChild(li);
-    }
+    if(visible.length === 0) list.appendChild(mkEl("li", "empty", t("results.empty")));
     state.results.forEach(r=>{
-      const li = document.createElement("li");
-      li.className = "lrow" + (r.done ? " done" : "") + (r.tie ? " tie" : "") + (r.rank === 1 ? " first" : "");
+      const li = mkEl("li", "lrow" + (r.done ? " done" : "") + (r.tie ? " tie" : "") + (r.rank === 1 ? " first" : ""));
       if(r.done && !state.showChecked) li.classList.add("hidden");
 
-      const stamp = document.createElement("div"); stamp.className = "stamp"; stamp.textContent = r.rank;
-      const name = document.createElement("div"); name.className = "name"; name.textContent = r.item;
-      const score = document.createElement("div"); score.className = "score"; score.textContent = r.score;
-      const check = document.createElement("label"); check.className = "check"; check.title = t("results.markDone");
+      const stamp = mkEl("div", "stamp", r.rank);
+      const name = mkEl("div", "name", r.item);
+      const score = mkEl("div", "score", r.score);
+      const check = mkEl("label", "check"); check.title = t("results.markDone");
       const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = r.done;
       cb.addEventListener("change", ()=>{ r.done = cb.checked; syncLoadedList(); renderResults(); });
-      const box = document.createElement("span"); box.className = "box"; box.innerHTML = CHECK_SVG;
+      const box = mkEl("span", "box"); box.innerHTML = CHECK_SVG;
       check.appendChild(cb); check.appendChild(box);
 
       li.appendChild(stamp); li.appendChild(name); li.appendChild(score); li.appendChild(check);
       list.appendChild(li);
     });
     const doneCount = state.results.filter(r=>r.done).length;
-    $("done-stat").innerHTML = esc(t("results.doneStat"))
-      .split("{done}").join("<b>" + doneCount + "</b>")
-      .split("{total}").join("<b>" + state.results.length + "</b>");
+    $("done-stat").innerHTML = tHTML("results.doneStat",
+      {done: "<b>" + doneCount + "</b>", total: "<b>" + state.results.length + "</b>"});
     $("toggle-checked").textContent = state.showChecked ? t("results.hideChecked") : t("results.showChecked");
     $("back-results").disabled = state.history.length === 0;
   }
@@ -1509,38 +1500,27 @@
     if(preferred && available.includes(preferred)) return preferred;
     return available[0];
   }
+  // Stored styles/locales are custom by definition and never clobber a built-in id.
+  function restoreCustom(saved, registry, register){
+    for(const id in saved){
+      const def = saved[id]; def.custom = true;
+      if(!registry[id] || registry[id].custom) register(id, def);
+    }
+  }
   function init(){
     if(Object.keys(VERSUS.locales).length === 0 || Object.keys(VERSUS.styles).length === 0) return bootFail();
     const cfg = VERSUS.config;
 
     // restore persisted user data
-    const savedStyles = STORE.get(K_STYLES, null);
-    if(savedStyles && savedStyles.styles){
-      for(const id in savedStyles.styles){
-        const d = savedStyles.styles[id]; d.custom = true;
-        if(!VERSUS.styles[id] || VERSUS.styles[id].custom) VERSUS.registerStyle(id, d);
-      }
-    }
-    const savedLocales = STORE.get(K_LOCALES, null);
-    if(savedLocales && savedLocales.locales){
-      for(const id in savedLocales.locales){
-        const d = savedLocales.locales[id]; d.custom = true;
-        if(!VERSUS.locales[id] || VERSUS.locales[id].custom) VERSUS.registerLocale(id, d);
-      }
-    }
-    const savedOvr = STORE.get(K_OVR, null);
-    if(savedOvr && savedOvr.overrides) overrides = savedOvr.overrides;
-    else if(cfg.overrides) overrides = cfg.overrides;
-    const savedLists = STORE.get(K_LISTS, null);
-    if(savedLists && savedLists.lists) lists = savedLists.lists;
+    restoreCustom(STORE.get(K_STYLES, {}).styles, VERSUS.styles, VERSUS.registerStyle);
+    restoreCustom(STORE.get(K_LOCALES, {}).locales, VERSUS.locales, VERSUS.registerLocale);
+    overrides = STORE.get(K_OVR, {}).overrides || cfg.overrides || {};
+    lists = STORE.get(K_LISTS, {}).lists || {};
     const work = STORE.get(K_WORK, null);
     if(work){
       if(typeof work.items === "string" && work.items) $("items").value = work.items;
       if(typeof work.question === "string" && work.question) $("question").value = work.question;
-      if(["binary","sequential","simple"].includes(work.mode)){
-        state.mode = work.mode;
-        document.querySelectorAll(".m-opt").forEach(b=> b.classList.toggle("active", b.dataset.mode === state.mode));
-      }
+      if(["binary","sequential","simple"].includes(work.mode)) setMode(work.mode);
     }
     const prefs = STORE.get(K_PREFS, {});
 
@@ -1560,19 +1540,11 @@
       r.readAsText(f); e.target.value = "";
     });
     document.querySelectorAll(".m-opt").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        state.mode = btn.dataset.mode;
-        renderMethodCounts(); queueWorkspaceSave();
-      });
+      btn.addEventListener("click", ()=>{ setMode(btn.dataset.mode); queueWorkspaceSave(); });
     });
     $("lists-toggle").addEventListener("click", ()=> setSidebar(!sbOpen));
     $("lists-close").addEventListener("click", ()=> setSidebar(false));
     $("list-new").addEventListener("click", newList);
-    $("list-import").addEventListener("change", e=>{
-      const f = e.target.files[0];
-      if(f) importArtifact(f);
-      e.target.value = "";
-    });
     $("list-save").addEventListener("click", ()=>{
       const name = $("list-name").value.replace(/\s+/g," ").trim();
       if(!name){ showNotice(t("lists.nameNeeded")); $("list-name").focus(); return; }
@@ -1614,11 +1586,12 @@
     $("export-zip").addEventListener("click", exportSiteZip);
     $("export-style").addEventListener("click", exportCurrentStyle);
     $("export-locale").addEventListener("click", exportCurrentLocale);
-    $("import-file").addEventListener("change", e=>{
+    // Styles, locales and lists all arrive through the same .json reader, from either picker.
+    ["import-file","list-import"].forEach(id=> $(id).addEventListener("change", e=>{
       const f = e.target.files[0];
       if(f) importArtifact(f);
       e.target.value = "";
-    });
+    }));
 
     applyStyle(pick(prefs.styleId || cfg.defaultStyle || VERSUS.defaultStyle, styleIds));
     applyLocale(pick(prefs.locale || cfg.defaultLocale || VERSUS.defaultLocale, localeIds));
