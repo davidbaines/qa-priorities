@@ -1,6 +1,6 @@
 // Priorities service worker: versioned cache so the app works offline and
 // installs as a PWA. Bump CACHE on every release so clients pick up new files.
-const CACHE = "priorities-v1";
+const CACHE = "priorities-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -21,7 +21,13 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  // cache:"reload" bypasses the browser HTTP cache (GitHub Pages serves max-age=600),
+  // so a version bump can never seed the new cache with stale pre-release files.
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c => c.addAll(ASSETS.map(u => new Request(u, { cache: "reload" }))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", e => {
@@ -37,12 +43,16 @@ self.addEventListener("fetch", e => {
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
 
   // Navigations: network first so deployments arrive promptly; cache when offline.
+  // Only cache successful responses: a transient 404/502 must never replace the
+  // offline app shell or get pinned by the cache-first branch.
   if (e.request.mode === "navigate") {
     e.respondWith(
       fetch(e.request)
         .then(res => {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put("./index.html", copy));
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put("./index.html", copy));
+          }
           return res;
         })
         .catch(() => caches.match("./index.html"))
@@ -50,11 +60,13 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // Everything else same-origin: cache first, then network (caching the result).
+  // Everything else same-origin: cache first, then network (caching good results).
   e.respondWith(
     caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
-      const copy = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, copy));
+      if (res.ok) {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy));
+      }
       return res;
     }))
   );

@@ -20,7 +20,10 @@ the safety gate).
 4. Keep the `{n}`, `{total}`, `{done}` placeholders in the strings that have them.
    Two strings (`compare.kbdHint`, `results.footnote`) may contain simple HTML.
 5. Add the code to the list in `locales/manifest.js`.
-6. Test: open `index.html` locally and switch to your language — check all three
+6. Bump the `CACHE` version string at the top of `sw.js` (e.g. `priorities-v2` →
+   `priorities-v3`). Without this, returning visitors' offline caches keep serving
+   the old files and your change never reaches them.
+7. Test: open `index.html` locally and switch to your language — check all three
    screens and the Customize panel.
 
 An easy way to draft a translation without touching code: open the live site,
@@ -62,7 +65,9 @@ files enter the project only through pull-request review.
    always define every token; don't remove tokens from it).
 3. `googleFonts` is optional; every font stack must end in a system fallback.
 4. Add the id to `styles/manifest.js`.
-5. Test in the browser: switch to your style, run a full ranking, check both
+5. Bump the `CACHE` version string at the top of `sw.js` (see the language checklist
+   for why).
+6. Test in the browser: switch to your style, run a full ranking, check both
    light-on-dark readability and the compare screen.
 
 The quickest authoring route: use the Customize panel's colour/font/size
